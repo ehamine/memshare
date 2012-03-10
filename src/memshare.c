@@ -785,27 +785,39 @@ int signal3(char *proc, int data1, int data2, int data3)
 	return 0;
 }
 
+int get_datasize(char *proc) {
+    int index;
+    proc_entry *entry;
+    
+    if ((index = get_proc_index(proc)) < 0) {
+		print(CH_INFO, "memshare: No such process %s\n", proc);
+		return 0;
+	}
+	entry = get_proc_at(index);
+    return (entry->size_shm);
+}
+
  /*
     int
-    a_data(int index, char *data, int len)
+    s_data(int index, char *data, int len)
     {
     return 0;
     }
 
     int
-    a_signal1(int index, int data)
+    s_signal1(int index, int data)
     {
     return 0;
     }
 
     int
-    a_signal2(int index, int data1, int data2)
+    s_signal2(int index, int data1, int data2)
     {
     return 0;
     }
 
     int
-    a_signal3(int index, int data1, int data2, int data3)
+    s_signal3(int index, int data1, int data2, int data3)
     {
     return 0;
     } */

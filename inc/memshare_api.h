@@ -133,3 +133,14 @@ int signal2(char*, int, int);
 /*                      2 Memshare not initialized                           */
 /*****************************************************************************/
 int signal3(char*, int, int, int);
+
+/*****************************************************************************/
+/* Function Name      : get_datasize                                         */
+/* Description        : This function ask for the size of data a process     */
+/*                      can receive                                          */
+/* Input(s)           : proc(char*)                                          */
+/* Output(s)          : None.                                                */
+/* Return Value(s)    : 0 No such process                                    */
+/*                      n The max size in bytes that can be sent with data   */
+/*****************************************************************************/
+int get_datasize(char*);

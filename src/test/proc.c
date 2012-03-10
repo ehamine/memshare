@@ -39,7 +39,7 @@ void data_callback(char *proc, char *msg, int len)
         switch (state) {
             case 3: {
                 if (!strcmp("memshare", msg))
-                    printf("Test 4 ok \n");
+                    printf("Data test ok \n");
                 state++;
             }
             default: {
@@ -56,7 +56,7 @@ void signal1_callback(char *proc, int value)
         switch (state) {
             case 0: {
                 if (value == 2)
-                    printf("Test 1 ok \n");
+                    printf("Signal1 test1 ok \n");
                 state++;
             }
             default: {
@@ -73,7 +73,7 @@ void signal2_callback(char *proc, int value1, int value2)
         switch (state) {
             case 1: {
                 if ((value1 == 3) && (value2 == 4))
-                    printf("Test 2 ok \n");
+                    printf("Signal2 test1 ok \n");
                 state++;
             }
             default: {
@@ -90,7 +90,7 @@ void signal3_callback(char *proc, int value1, int value2, int value3)
         switch (state) {
             case 2: {
                 if ((value1 == 5) && (value2 == 6) && (value3 == 7))
-                    printf("Test 3 ok \n");
+                    printf("Signal3 test1 ok \n");
                 state++;
             }
             default: {
@@ -124,6 +124,19 @@ int main(int argc, char *argv[])
 
     /* process one starts */
     if (!strcmp(procname, "one")) {
+
+        printf("Datasize for proc 'two' %d\n", (val = get_datasize("two")));
+        if (val == 512)
+	  printf("Datasize test1 ok\n");
+        else
+	  printf("Datasize test1 fail\n");
+
+	printf("Datasize for proc 'bogus' %d\n", (val = get_datasize("bogus")));
+        if (val == 0)
+          printf("Datasize test1 ok\n");
+        else
+          printf("Datasize test1 fail\n");
+
         /* Send signal1 to process two who will send it back */
         if (val = signal1("two", 2)) {
             printf("signal1 malfunctioned %d\n", val);
@@ -137,9 +150,13 @@ int main(int argc, char *argv[])
             printf("signal3 malfunctioned %d\n", val);
         }
         /* Send data 'memshare' to process three who will send it back */
-        if (val = data("three", "memshare\x0", strlen("memshare")+1)) {
+	if ((strlen("memshare")+1) <= get_datasize("three")) {
+	  if (val = data("three", "memshare\x0", strlen("memshare")+1)) {
             printf("data malfunctioned %d \n", val);
-        }
+	  }
+	} else {
+	  printf("Buffer to small for data\n");
+	}
         /* Send 'exit' to process three who will exit */
         if (val = data("three", "exit\x0", strlen("memshare")+1)) {
             printf("data malfunctioned %d \n", val);
@@ -147,7 +164,7 @@ int main(int argc, char *argv[])
         /* Try to send signal1 to process three who should have exit */
         val = signal1("three", 1);
         if (val == 1) {
-            printf("Test 5 ok\n");
+            printf("Signal1 fault test1 ok\n");
         }
         /* Send 'exit' to process two who will exit */
         if (val = data("two", "exit\x0", strlen("memshare")+1)) {
@@ -156,16 +173,15 @@ int main(int argc, char *argv[])
         /* Try to send signal1 to process two who should have exit */
         val = signal1("two", 2);
         if (val == 1) {
-            printf("Test 6 ok\n");
+            printf("Signal1 fault test2 ok\n");
         }
         /* Try to send signal1 to process unknown who never have existed */
         val = signal1("unknown", 2);
         if (val == 1) {
-            printf("Test 7 ok\n");
+            printf("Signal1 fault test3 ok\n");
         }
         exit(0);
     }
-    printf("%s reaching exit\n", procname);
     while (1)
         sleep(3);
 }
