@@ -16,7 +16,6 @@
 /* along with this program; if not, write to the Free Software                     */
 /* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
 
- 
 #include <memshare_api.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,14 +23,13 @@
 #include <string.h>
 #include <unistd.h>
 
-
 int main(int argc, char *argv[])
 {
-    system("./proc three &");
-    sleep(1);
-    system("./proc two &");
-    sleep(1);
-    system("./proc one &");
-    sleep(1);
-    return 0;
+        system("./proc three &");
+        sleep(1);
+        system("./proc two &");
+        sleep(1);
+        system("./proc one &");
+        sleep(1);
+        return 0;
 }

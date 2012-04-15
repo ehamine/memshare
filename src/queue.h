@@ -53,7 +53,7 @@ int seize_queue(int *index, char *name, int size);
 /*                      1 entry has to be a pointer                          */
 /*                      2 queue full, the enty is dropped                    */
 /*****************************************************************************/
-int lo_qadd(int index, char** entry);
+int lo_qadd(int index, char **entry);
 
 /*****************************************************************************/
 /* Function Name      : hi_qadd                                              */
@@ -63,7 +63,7 @@ int lo_qadd(int index, char** entry);
 /*                      1 entry has to be a pointer                          */
 /*                      2 queue full, the enty is dropped                    */
 /*****************************************************************************/
-int hi_qadd(int index, char** entry);
+int hi_qadd(int index, char **entry);
 
 /*****************************************************************************/
 /* Function Name      : qget                                                 */

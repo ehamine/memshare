@@ -20,7 +20,7 @@
 
 sem_t qlock[NUM_OF_QUEUES], seize_lock;
 pthread_mutex_t condition_mutex[NUM_OF_QUEUES] = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  condition_cond[NUM_OF_QUEUES]  = PTHREAD_COND_INITIALIZER;
+pthread_cond_t condition_cond[NUM_OF_QUEUES] = PTHREAD_COND_INITIALIZER;
 int low_bottom[NUM_OF_QUEUES], low_top[NUM_OF_QUEUES];
 int low_totalsize[NUM_OF_QUEUES], low_state[NUM_OF_QUEUES];
 int hi_bottom[NUM_OF_QUEUES], hi_top[NUM_OF_QUEUES];
@@ -45,17 +45,15 @@ static int hi_qinit(int index, int size);
 
 int init_queues()
 {
-  int i;
-  for (i=0;i<NUM_OF_QUEUES;i++)
-    {
-      seize_queue_state[i] = 0;
-      if ((seize_queue_name[i] = malloc(100)) == 0)
-	{
-	  return 1;
-	}
-    }
-  queue_state = 1;
-  return 0;
+        int i;
+        for (i = 0; i < NUM_OF_QUEUES; i++) {
+                seize_queue_state[i] = 0;
+                if ((seize_queue_name[i] = malloc(100)) == 0) {
+                        return 1;
+                }
+        }
+        queue_state = 1;
+        return 0;
 }
 
 /*****************************************************************************/
@@ -74,41 +72,36 @@ int init_queues()
 
 int seize_queue(int *index, char *name, int size)
 {
-  int i;
-  if (queue_state == 0)
-    {
-      return 2;
-    }
+        int i;
+        if (queue_state == 0) {
+                return 2;
+        }
 
-  if (index == 0 || name == 0 || size == 0)
-    {
-      return 4;
-    }
+        if (index == 0 || name == 0 || size == 0) {
+                return 4;
+        }
 
-  /* search for already seized */
-  for (i=0;i<NUM_OF_QUEUES;i++)
-    {
-      if ((seize_queue_state[i] == 1) && (!strncmp(name, seize_queue_name[i], NUM_OF_QUEUES)))
-	{
-	  *index = i;
-	  return 1;
-	}
-    }
-  /* search for a free entry */
-  for (i=0;i<NUM_OF_QUEUES;i++)
-   {
-     if (seize_queue_state[i] == 0)
-       {
-	 seize_queue_state[i] = 1;
-	 /* Found an index initalize the queues for that index */
-	 lo_qinit(i, size);
-	 hi_qinit(i, size);
-	 strncpy(seize_queue_name[i], name, NUM_OF_QUEUES);
-	 *index = i;
-	  return 0;
-	}
-    }
-  return 3;
+        /* search for already seized */
+        for (i = 0; i < NUM_OF_QUEUES; i++) {
+                if ((seize_queue_state[i] == 1)
+                    && (!strncmp(name, seize_queue_name[i], NUM_OF_QUEUES))) {
+                        *index = i;
+                        return 1;
+                }
+        }
+        /* search for a free entry */
+        for (i = 0; i < NUM_OF_QUEUES; i++) {
+                if (seize_queue_state[i] == 0) {
+                        seize_queue_state[i] = 1;
+                        /* Found an index initalize the queues for that index */
+                        lo_qinit(i, size);
+                        hi_qinit(i, size);
+                        strncpy(seize_queue_name[i], name, NUM_OF_QUEUES);
+                        *index = i;
+                        return 0;
+                }
+        }
+        return 3;
 }
 
 /*****************************************************************************/
@@ -122,19 +115,17 @@ int seize_queue(int *index, char *name, int size)
 
 static int lo_qinit(int index, int size)
 {
-  if ((low_queuebase[index] = malloc(sizeof(char*) * size)) != NULL)
-    {
-      /* initalize all stuff */
-      low_bottom[index] = 0;
-      low_top[index] = 0;
-      low_totalsize[index] = size;
-      low_state[index] = EMPTY;
-      sem_init(&qlock[index], 0, 1);
-      return 0;
-    }
-  return 1;
+        if ((low_queuebase[index] = malloc(sizeof(char *) * size)) != NULL) {
+                /* initalize all stuff */
+                low_bottom[index] = 0;
+                low_top[index] = 0;
+                low_totalsize[index] = size;
+                low_state[index] = EMPTY;
+                sem_init(&qlock[index], 0, 1);
+                return 0;
+        }
+        return 1;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : hi_qinit                                             */
@@ -147,18 +138,16 @@ static int lo_qinit(int index, int size)
 
 static int hi_qinit(int index, int size)
 {
-    if ((hi_queuebase[index] = malloc(sizeof(char*) * size)) != NULL)
-    {
-	hi_bottom[index] = 0;
-	hi_top[index] = 0;
-	hi_totalsize[index] = size;
-	hi_state[index] = EMPTY;
-	sem_init(&qlock[index], 0, 1);
-	return 0;
-    }
-    return 1;
+        if ((hi_queuebase[index] = malloc(sizeof(char *) * size)) != NULL) {
+                hi_bottom[index] = 0;
+                hi_top[index] = 0;
+                hi_totalsize[index] = size;
+                hi_state[index] = EMPTY;
+                sem_init(&qlock[index], 0, 1);
+                return 0;
+        }
+        return 1;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : lo_qadd                                              */
@@ -169,40 +158,34 @@ static int hi_qinit(int index, int size)
 /*                      2 queue full, the enty is dropped                    */
 /*****************************************************************************/
 
-int lo_qadd(int index, char** entry)
+int lo_qadd(int index, char **entry)
 {
-  if (entry == NULL)
-    {
-      return 1;
-    }
-  sem_wait(&qlock[index]);
-  int prev_state = low_state[index];
-  if (low_state[index] == FULL)
-    {
-      sem_post(&qlock[index]);
-      return 2;
-    }
-  low_queuebase[index][low_top[index]] = (char*)*entry;
-  low_top[index]++;
-  low_state[index] = NORMAL;
-  if (low_top[index] == low_totalsize[index])
-    {
-      low_top[index] = 0;
-    }
-  if (low_top[index] == low_bottom[index])
-    {
-      low_state[index] = FULL;
-    }
-  pthread_mutex_lock( &condition_mutex[index] );
-  if ((prev_state == EMPTY) && (hi_state[index] == EMPTY))
-    {
-      pthread_cond_signal( &condition_cond[index] );
-    }
-  pthread_mutex_unlock( &condition_mutex[index] );
-  sem_post(&qlock[index]);
-  return 0;
+        if (entry == NULL) {
+                return 1;
+        }
+        sem_wait(&qlock[index]);
+        int prev_state = low_state[index];
+        if (low_state[index] == FULL) {
+                sem_post(&qlock[index]);
+                return 2;
+        }
+        low_queuebase[index][low_top[index]] = (char *)*entry;
+        low_top[index]++;
+        low_state[index] = NORMAL;
+        if (low_top[index] == low_totalsize[index]) {
+                low_top[index] = 0;
+        }
+        if (low_top[index] == low_bottom[index]) {
+                low_state[index] = FULL;
+        }
+        pthread_mutex_lock(&condition_mutex[index]);
+        if ((prev_state == EMPTY) && (hi_state[index] == EMPTY)) {
+                pthread_cond_signal(&condition_cond[index]);
+        }
+        pthread_mutex_unlock(&condition_mutex[index]);
+        sem_post(&qlock[index]);
+        return 0;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : hi_qadd                                              */
@@ -213,40 +196,34 @@ int lo_qadd(int index, char** entry)
 /*                      2 queue full, the enty is dropped                    */
 /*****************************************************************************/
 
-int hi_qadd(int index, char** entry)
+int hi_qadd(int index, char **entry)
 {
-    if (entry == NULL)
-    {
-	return 1;
-    }
-    sem_wait(&qlock[index]);
-    int prev_state = hi_state[index];
-    if (hi_state[index] == FULL)
-    {
-	sem_post(&qlock[index]);
-	return 2;
-    }
-    hi_queuebase[index][hi_top[index]] = (char*)*entry;
-    hi_top[index]++;
-    hi_state[index] = NORMAL;
-    if (hi_top[index] == hi_totalsize[index])
-    {
-	hi_top[index] = 0;
-    }
-    if (hi_top[index] == hi_bottom[index])
-    {
-	hi_state[index] = FULL;
-    }
-    pthread_mutex_lock( &condition_mutex[index] );
-    if ((prev_state == EMPTY) && (low_state[index] == EMPTY))
-    {
-	pthread_cond_signal( &condition_cond[index] );
-    }
-    pthread_mutex_unlock( &condition_mutex[index] );
-    sem_post(&qlock[index]);
-    return 0;
+        if (entry == NULL) {
+                return 1;
+        }
+        sem_wait(&qlock[index]);
+        int prev_state = hi_state[index];
+        if (hi_state[index] == FULL) {
+                sem_post(&qlock[index]);
+                return 2;
+        }
+        hi_queuebase[index][hi_top[index]] = (char *)*entry;
+        hi_top[index]++;
+        hi_state[index] = NORMAL;
+        if (hi_top[index] == hi_totalsize[index]) {
+                hi_top[index] = 0;
+        }
+        if (hi_top[index] == hi_bottom[index]) {
+                hi_state[index] = FULL;
+        }
+        pthread_mutex_lock(&condition_mutex[index]);
+        if ((prev_state == EMPTY) && (low_state[index] == EMPTY)) {
+                pthread_cond_signal(&condition_cond[index]);
+        }
+        pthread_mutex_unlock(&condition_mutex[index]);
+        sem_post(&qlock[index]);
+        return 0;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : gethiq                                               */
@@ -257,20 +234,17 @@ int hi_qadd(int index, char** entry)
 
 static char *gethiq(int index)
 {
-  char *retval;
-  retval = hi_queuebase[index][hi_bottom[index]];
-  hi_bottom[index]++;
-  if (hi_bottom[index] == hi_totalsize[index])
-    {
-      hi_bottom[index] = 0;
-    }
-  if (hi_bottom[index] == hi_top[index])
-    {
-      hi_state[index] = EMPTY;
-    }
-  return retval;
+        char *retval;
+        retval = hi_queuebase[index][hi_bottom[index]];
+        hi_bottom[index]++;
+        if (hi_bottom[index] == hi_totalsize[index]) {
+                hi_bottom[index] = 0;
+        }
+        if (hi_bottom[index] == hi_top[index]) {
+                hi_state[index] = EMPTY;
+        }
+        return retval;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : getliq                                               */
@@ -281,20 +255,17 @@ static char *gethiq(int index)
 
 static char *getloq(int index)
 {
-  char *retval;
-  retval = low_queuebase[index][low_bottom[index]];
-  low_bottom[index]++;
-  if (low_bottom[index] == low_totalsize[index])
-    {
-      low_bottom[index] = 0;
-    }
-  if (low_bottom[index] == low_top[index])
-    {
-      low_state[index] = EMPTY;
-    }
-  return retval;
+        char *retval;
+        retval = low_queuebase[index][low_bottom[index]];
+        low_bottom[index]++;
+        if (low_bottom[index] == low_totalsize[index]) {
+                low_bottom[index] = 0;
+        }
+        if (low_bottom[index] == low_top[index]) {
+                low_state[index] = EMPTY;
+        }
+        return retval;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : qget                                                 */
@@ -307,47 +278,37 @@ static char *getloq(int index)
 
 char *qget(int index)
 {
-  char *retval;
-  static int count;
- 
-  pthread_mutex_lock( &condition_mutex[index] );
-  if ((low_state[index] == EMPTY) && (hi_state[index] == EMPTY))
-    {
-      pthread_cond_wait( &condition_cond[index], &condition_mutex[index] );
-    }
-  pthread_mutex_unlock( &condition_mutex[index] );
-  sem_wait(&qlock[index]);
+        char *retval;
+        static int count;
 
-  /* pick every 10th packet first from loq*/
-  count++;
-  if (count == 10) 
-    {
-      if (low_state[index] != EMPTY)
-	{
-	  retval = getloq(index);
-	}
-      else if (hi_state[index] != EMPTY)
-	{
-	  retval = gethiq(index);
-	}
-      count = 0;
-    } 
-  else
-    { 
-      if (hi_state[index] != EMPTY)
-	{
-	  retval = gethiq(index);
-	}
-      else if (low_state[index] != EMPTY)
-	{
-	  retval = getloq(index);
-	}
-    }
- 
-  sem_post(&qlock[index]);
-  return retval;
+        pthread_mutex_lock(&condition_mutex[index]);
+        if ((low_state[index] == EMPTY) && (hi_state[index] == EMPTY)) {
+                pthread_cond_wait(&condition_cond[index],
+                                  &condition_mutex[index]);
+        }
+        pthread_mutex_unlock(&condition_mutex[index]);
+        sem_wait(&qlock[index]);
+
+        /* pick every 10th packet first from loq */
+        count++;
+        if (count == 10) {
+                if (low_state[index] != EMPTY) {
+                        retval = getloq(index);
+                } else if (hi_state[index] != EMPTY) {
+                        retval = gethiq(index);
+                }
+                count = 0;
+        } else {
+                if (hi_state[index] != EMPTY) {
+                        retval = gethiq(index);
+                } else if (low_state[index] != EMPTY) {
+                        retval = getloq(index);
+                }
+        }
+
+        sem_post(&qlock[index]);
+        return retval;
 }
-
 
 /*****************************************************************************/
 /* Function Name      : qpeek                                                */
@@ -360,20 +321,16 @@ char *qget(int index)
 
 int qpeek(int index, char **buff)
 {
-    pthread_mutex_lock( &condition_mutex[index] );
-    if (hi_state[index] != EMPTY)
-    {
-	(*buff) = hi_queuebase[index][hi_bottom[index]];
-	pthread_mutex_unlock( &condition_mutex[index] );
-	return 1;
-    }
-    else if (low_state[index] != EMPTY)
-    {
-	(*buff) = low_queuebase[index][low_bottom[index]];
-	pthread_mutex_unlock( &condition_mutex[index] );
-	return 1;
-    }
-    pthread_mutex_unlock( &condition_mutex[index] );
-    return 0;
+        pthread_mutex_lock(&condition_mutex[index]);
+        if (hi_state[index] != EMPTY) {
+                (*buff) = hi_queuebase[index][hi_bottom[index]];
+                pthread_mutex_unlock(&condition_mutex[index]);
+                return 1;
+        } else if (low_state[index] != EMPTY) {
+                (*buff) = low_queuebase[index][low_bottom[index]];
+                pthread_mutex_unlock(&condition_mutex[index]);
+                return 1;
+        }
+        pthread_mutex_unlock(&condition_mutex[index]);
+        return 0;
 }
-

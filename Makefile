@@ -1,7 +1,7 @@
 INC=-Iinc/
 CC=gcc
 
-all: out/libmemshare.a out/proc out/main
+all: out/libmemshare.a out/proc out/main out/memsend
 
 out/memshare.o: src/memshare.c
 	$(CC) -o $@ -shared -c $(INC) $<
@@ -16,7 +16,10 @@ out/proc: src/test/proc.c
 
 out/main: src/test/main.c
 	$(CC) $(INC) -o $@ $<
-	
+
+out/memsend: src/memsend.c
+	$(CC) $(INC) -o $@ $< out/libmemshare.a -lpthread
+
 #testing: libmemshare.a
 #	$(CC)
 
@@ -26,4 +29,4 @@ clean:
 	rm out/*.o
 	rm out/*.a
 	rm out/*
-	#rm test
+

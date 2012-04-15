@@ -30,14 +30,17 @@ int set_print_level(int);
 /*****************************************************************************/
 /* Function Name      : init_memshare                                        */
 /* Description        : This function initialises the memshare lib           */
-/* Input(s)           : proc name (string 20 char), size of memory for       */
-/*                      receiving buffer in byte                             */
+/* Input(s)           : proc name(string 20 char)                            */
+/*                      Size of memory for receiving buffer(int byte)        */
+/*                      If i register a process or not(int 0 no proc,1 proc) */
 /*                                                                           */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
 /*                      1 meaning semaphore allocation failure               */
+/*                      2 register a proc without allocation size            */
+/*                      3 A NULL pointer as a proc name                      */
 /*****************************************************************************/
-int init_memshare(char*, int);
+int init_memshare(char*, int, int);
 
 
 /*****************************************************************************/

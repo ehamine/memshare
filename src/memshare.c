@@ -16,7 +16,6 @@
 /* along with this program; if not, write to the Free Software                     */
 /* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
 
- 
 #include "memshare.h"
 #include "memshare_api.h"
 #include <sys/shm.h>
@@ -33,9 +32,9 @@
 static pthread_t recthread1_t, recthread2_t;
 
 union semun {
-	int val;
-	struct semid_ds *buf;
-	ushort *array;
+        int val;
+        struct semid_ds *buf;
+        ushort *array;
 };
 
 /* global pointer to the ctrl area, initialized by get_shm() */
@@ -75,119 +74,119 @@ callback_3 callback3 = NULL;
 callback_data callbackdata = NULL;
 
 /* print functions either syslog, printf of user specific */
-int current_level = CH_DEBUG;
+int current_level = CH_ERROR;
 
 static int print(int level, const char *format, ...)
 {
-	va_list ap;
-	int retval = 0;
+        va_list ap;
+        int retval = 0;
 
-	/* add syslog and user specific TODO */
-	va_start(ap, format);
-	if (level <= current_level) {
-		retval = vprintf(format, ap);
-	}
-	va_end(ap);
-	return retval;
+        /* add syslog and user specific TODO */
+        va_start(ap, format);
+        if (level <= current_level) {
+                retval = vprintf(format, ap);
+        }
+        va_end(ap);
+        return retval;
 }
 
 static void *recthread2(void *arg)
 {
-	header *hdr;
-	signal *sig;
-	char *msg;
-	int value1;
+        header *hdr;
+        signal *sig;
+        char *msg;
+        int value1;
 
-	for (;;) {
-		msg = qget(queue_index);
-		hdr = (header *) msg;
-		switch (hdr->msg_type) {
-		case DATA:
-			if (callbackdata != NULL) {
-				callbackdata(hdr->proc_name,
-					     (msg + SIZEOF_HEADER),
-					     hdr->msg_len);
-				free(msg);
-			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
-				      DATA);
-			}
-			break;
+        for (;;) {
+                msg = qget(queue_index);
+                hdr = (header *) msg;
+                switch (hdr->msg_type) {
+                case DATA:
+                        if (callbackdata != NULL) {
+                                callbackdata(hdr->proc_name,
+                                             (msg + SIZEOF_HEADER),
+                                             hdr->msg_len);
+                                free(msg);
+                        } else {
+                                print(CH_INFO,
+                                      "memshare: No callback for msg_type %d\n",
+                                      DATA);
+                        }
+                        break;
 
-		case SIGNAL1:
-			sig = (signal *) (msg + SIZEOF_HEADER);
-			if (callback1 != NULL) {
-				callback1(hdr->proc_name, sig->signal1);
-				free(msg);
-			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
-				      SIGNAL1);
-			}
-			break;
+                case SIGNAL1:
+                        sig = (signal *) (msg + SIZEOF_HEADER);
+                        if (callback1 != NULL) {
+                                callback1(hdr->proc_name, sig->signal1);
+                                free(msg);
+                        } else {
+                                print(CH_INFO,
+                                      "memshare: No callback for msg_type %d\n",
+                                      SIGNAL1);
+                        }
+                        break;
 
-		case SIGNAL2:
-			sig = (signal *) (msg + SIZEOF_HEADER);
-			if (callback2 != NULL) {
-				callback2(hdr->proc_name, sig->signal1,
-					  sig->signal2);
-				free(msg);
-			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
-				      SIGNAL2);
-			}
-			break;
+                case SIGNAL2:
+                        sig = (signal *) (msg + SIZEOF_HEADER);
+                        if (callback2 != NULL) {
+                                callback2(hdr->proc_name, sig->signal1,
+                                          sig->signal2);
+                                free(msg);
+                        } else {
+                                print(CH_INFO,
+                                      "memshare: No callback for msg_type %d\n",
+                                      SIGNAL2);
+                        }
+                        break;
 
-		case SIGNAL3:
-			sig = (signal *) (msg + SIZEOF_HEADER);
-			if (callback3 != NULL) {
-				callback3(hdr->proc_name, sig->signal1,
-					  sig->signal2, sig->signal3);
-				free(msg);
-			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
-				      SIGNAL3);
-			}
-			break;
+                case SIGNAL3:
+                        sig = (signal *) (msg + SIZEOF_HEADER);
+                        if (callback3 != NULL) {
+                                callback3(hdr->proc_name, sig->signal1,
+                                          sig->signal2, sig->signal3);
+                                free(msg);
+                        } else {
+                                print(CH_INFO,
+                                      "memshare: No callback for msg_type %d\n",
+                                      SIGNAL3);
+                        }
+                        break;
 
-		default:
-			print(CH_ERROR, "memshare: Illeagal msg_type %d\n",
-			      hdr->msg_type);
-			free(msg);
-			break;
-		}
-	}
+                default:
+                        print(CH_ERROR, "memshare: Illeagal msg_type %d\n",
+                              hdr->msg_type);
+                        free(msg);
+                        break;
+                }
+        }
 }
 
 static void *recthread1(void *arg)
 {
-	header *hdr;
-	char *msg;
+        header *hdr;
+        char *msg;
 
-	for (;;) {
-		/* Add check for prio, TODO */
-		print(CH_DEBUG, "recthread going to lock\n");
-		lock(mem_entry[my_index].rlock);
-		print(CH_DEBUG, "Entry inserted in shm for my process\n");
-		hdr = (header *) mem_entry[my_index].shm;
-		/* check return of allocation TODO */
-		msg = malloc(hdr->msg_len + SIZEOF_HEADER);
-		memcpy(msg, mem_entry[my_index].shm,
-		       (hdr->msg_len + SIZEOF_HEADER));
-		if (lo_qadd(queue_index, &msg)) {
-			/* Failed to put in queue, msg lost */
-			print(CH_ERROR,
-			      "memshare: Entry inserted in shm for my process\n");
-			free(msg);
-		} else {
-			/* msg concidered received */
-			inc_received();
-		}
-		unlock(mem_entry[my_index].wlock);
-	}
+        for (;;) {
+                /* Add check for prio, TODO */
+                print(CH_DEBUG, "recthread going to lock\n");
+                lock(mem_entry[my_index].rlock);
+                print(CH_DEBUG, "Entry inserted in shm for my process\n");
+                hdr = (header *) mem_entry[my_index].shm;
+                /* check return of allocation TODO */
+                msg = malloc(hdr->msg_len + SIZEOF_HEADER);
+                memcpy(msg, mem_entry[my_index].shm,
+                       (hdr->msg_len + SIZEOF_HEADER));
+                if (lo_qadd(queue_index, &msg)) {
+                        /* Failed to put in queue, msg lost */
+                        print(CH_ERROR,
+                              "memshare: Entry inserted in shm for my process\n");
+                        free(msg);
+                } else {
+                        /* msg concidered received */
+                        inc_received();
+                }
+                unlock(mem_entry[my_index].wlock);
+        }
 }
 
 /********** ipc semaphore functions
@@ -198,312 +197,312 @@ static void *recthread1(void *arg)
 /* we will initialize it to work as a mutex                                  */
 static int create_lock(int key, int value)
 {
-	/*struct sembuf op[1]; */
-	union semun ctrl;
-	int sem, mode = 0;
+        /*struct sembuf op[1]; */
+        union semun ctrl;
+        int sem, mode = 0;
 
-	print(CH_DEBUG, "create_lock key=%d, value=%d\n", key, value);
-	if ((sem = semget(key, 1, IPC_EXCL | IPC_CREAT | 0666)) == -1) {
-		/* Trying to open it exclusively failed, try normal */
-		print(CH_DEBUG, "create_lock Key=%d already open\n", key);
-		mode = 1;
-		if ((sem = semget(key, 1, IPC_CREAT | 0666)) == -1) {
-			print(CH_ERROR, "Unable to create semaphore\n");
-			return 0;
-		}
-	}
+        print(CH_DEBUG, "create_lock key=%d, value=%d\n", key, value);
+        if ((sem = semget(key, 1, IPC_EXCL | IPC_CREAT | 0666)) == -1) {
+                /* Trying to open it exclusively failed, try normal */
+                print(CH_DEBUG, "create_lock Key=%d already open\n", key);
+                mode = 1;
+                if ((sem = semget(key, 1, IPC_CREAT | 0666)) == -1) {
+                        print(CH_ERROR, "Unable to create semaphore\n");
+                        return 0;
+                }
+        }
 
-	/*op[0].sem_num = 0;
-	   op[0].sem_flg = 0; */
-	ctrl.val = value;
+        /*op[0].sem_num = 0;
+           op[0].sem_flg = 0; */
+        ctrl.val = value;
 
-	if (mode == 0) {
-		print(CH_DEBUG, "create_lock Init sem=%d to %d\n", sem, value);
-		/* Its the first time for this key, init it to work as a mutex */
-		if (semctl(sem, 0, SETVAL, ctrl) == -1) {
-			print(CH_ERROR,
-			      "memshare: Unable to initialize semaphore\n");
-			return 0;
-		}
-	}
-	return sem;
+        if (mode == 0) {
+                print(CH_DEBUG, "create_lock Init sem=%d to %d\n", sem, value);
+                /* Its the first time for this key, init it to work as a mutex */
+                if (semctl(sem, 0, SETVAL, ctrl) == -1) {
+                        print(CH_ERROR,
+                              "memshare: Unable to initialize semaphore\n");
+                        return 0;
+                }
+        }
+        return sem;
 }
 
 static int destroy_lock(int key)
 {
-	union semun ctrl;
-	int sem;
+        union semun ctrl;
+        int sem;
 
-	print(CH_DEBUG, "destroy_lock key=%d\n", key);
-	if ((sem = semget(key, 1, IPC_CREAT | 0600)) == -1) {
-		print(CH_ERROR, "memshare: Unable to create semaphore\n");
-		return 1;
-	}
-	if (semctl(sem, 0, IPC_RMID, ctrl) == -1) {
-		print(CH_ERROR, "memshare: Unable to initialize semaphore\n");
-		return 1;
-	}
-	return 0;
+        print(CH_DEBUG, "destroy_lock key=%d\n", key);
+        if ((sem = semget(key, 1, IPC_CREAT | 0600)) == -1) {
+                print(CH_ERROR, "memshare: Unable to create semaphore\n");
+                return 1;
+        }
+        if (semctl(sem, 0, IPC_RMID, ctrl) == -1) {
+                print(CH_ERROR, "memshare: Unable to initialize semaphore\n");
+                return 1;
+        }
+        return 0;
 }
 
 static void lock(int sem)
 {
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = -1;
-	op[0].sem_flg = SEM_UNDO;
-	semop(sem, op, 1);
+        struct sembuf op[1];
+        op[0].sem_num = 0;
+        op[0].sem_op = -1;
+        op[0].sem_flg = SEM_UNDO;
+        semop(sem, op, 1);
 }
 
 static void unlock(int sem)
 {
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = 1;
-	op[0].sem_flg = 0;
-	semop(sem, op, 1);
+        struct sembuf op[1];
+        op[0].sem_num = 0;
+        op[0].sem_op = 1;
+        op[0].sem_flg = 0;
+        semop(sem, op, 1);
 }
 
 static void set_active(int sem)
 {
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = 1;
-	op[0].sem_flg = SEM_UNDO;
-	semop(sem, op, 1);
+        struct sembuf op[1];
+        op[0].sem_num = 0;
+        op[0].sem_op = 1;
+        op[0].sem_flg = SEM_UNDO;
+        semop(sem, op, 1);
 }
 
 static void clear_active(int sem)
 {
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = -1;
-	op[0].sem_flg = 0;
-	semop(sem, op, 1);
+        struct sembuf op[1];
+        op[0].sem_num = 0;
+        op[0].sem_op = -1;
+        op[0].sem_flg = 0;
+        semop(sem, op, 1);
 }
 
 static int try_lock1(int sem)
 {
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = 0;
-	op[0].sem_flg = IPC_NOWAIT;
-	if (semop(sem, op, 1) == -1 && errno == EAGAIN) {
-		return 1;
-	}
-	return 0;
+        struct sembuf op[1];
+        op[0].sem_num = 0;
+        op[0].sem_op = 0;
+        op[0].sem_flg = IPC_NOWAIT;
+        if (semop(sem, op, 1) == -1 && errno == EAGAIN) {
+                return 1;
+        }
+        return 0;
 }
 
 /********** mem_proc functions **********/
 static void init_mem_proc(void)
 {
-	int i;
+        int i;
 
-	for (i = 0; i < NUMBER_OF_PROCS; i++) {
-		mem_entry[i].shm = NULL;
-		mem_entry[i].rlock = 0;
-		mem_entry[i].wlock = 0;
-		mem_entry[i].active = 0;
-	}
+        for (i = 0; i < NUMBER_OF_PROCS; i++) {
+                mem_entry[i].shm = NULL;
+                mem_entry[i].rlock = 0;
+                mem_entry[i].wlock = 0;
+                mem_entry[i].active = 0;
+        }
 }
 
 /* Check a specific index int the ctrl area and copy to local memory  */
 
 static void populate_mem_proc_single(int index)
 {
-	proc_entry *entry;
-	int sem, mode = 0;
+        proc_entry *entry;
+        int sem, mode = 0;
 
-	entry = (proc_entry *) get_proc_at(index);
-	if (entry->active) {
-		/* this entry should be active, if not it has crached and should be garbage collected */
-		if ((sem = create_lock(entry->key_active, 0)) != 0) {
-			if (try_lock1(sem)) {
-				print(CH_DEBUG, "Index %d is active by %s\n",
-				      index, entry->proc_name);
-				/* active lets store the data */
-				mem_entry[index].active = sem;
-				if ((mem_entry[index].shm =
-				     (char *)get_shm(entry->key_shm,
-						     entry->size_shm,
-						     &mode)) == 0) {
-					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to alloc shared mem\n");
-					clear_proc_entry(index);
-					return;
-				}
-				if ((mem_entry[index].rlock =
-				     create_lock(entry->key_rlock, 0)) == 0) {
-					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to create rlock\n");
-					clear_proc_entry(index);
-					return;
-				}
-				if ((mem_entry[index].wlock =
-				     create_lock(entry->key_wlock, 0)) == 0) {
-					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to create wlock\n");
-					clear_proc_entry(index);
-					return;
-				}
-			} else {
-				print(CH_INFO,
-				      "memshare: Index %d is active in shared mem but has no process\n",
-				      index);
-				clear_proc_entry(index);
-				/* garbage collect */
-			}
-			memcpy(mem_entry[index].proc_name, entry->proc_name,
-			       PROC_NAME_SIZE);
-		}
-	} else {
-		print(CH_INFO, "memshare: Index %d is not active\n", index);
-	}
+        entry = (proc_entry *) get_proc_at(index);
+        if (entry->active) {
+                /* this entry should be active, if not it has crached and should be garbage collected */
+                if ((sem = create_lock(entry->key_active, 0)) != 0) {
+                        if (try_lock1(sem)) {
+                                print(CH_DEBUG, "Index %d is active by %s\n",
+                                      index, entry->proc_name);
+                                /* active lets store the data */
+                                mem_entry[index].active = sem;
+                                if ((mem_entry[index].shm =
+                                     (char *)get_shm(entry->key_shm,
+                                                     entry->size_shm,
+                                                     &mode)) == 0) {
+                                        /* garbage collect, they should have valid keys */
+                                        print(CH_ERROR,
+                                              "memshare: Unable to alloc shared mem\n");
+                                        clear_proc_entry(index);
+                                        return;
+                                }
+                                if ((mem_entry[index].rlock =
+                                     create_lock(entry->key_rlock, 0)) == 0) {
+                                        /* garbage collect, they should have valid keys */
+                                        print(CH_ERROR,
+                                              "memshare: Unable to create rlock\n");
+                                        clear_proc_entry(index);
+                                        return;
+                                }
+                                if ((mem_entry[index].wlock =
+                                     create_lock(entry->key_wlock, 0)) == 0) {
+                                        /* garbage collect, they should have valid keys */
+                                        print(CH_ERROR,
+                                              "memshare: Unable to create wlock\n");
+                                        clear_proc_entry(index);
+                                        return;
+                                }
+                        } else {
+                                print(CH_INFO,
+                                      "memshare: Index %d is active in shared mem but has no process\n",
+                                      index);
+                                clear_proc_entry(index);
+                                /* garbage collect */
+                        }
+                        memcpy(mem_entry[index].proc_name, entry->proc_name,
+                               PROC_NAME_SIZE);
+                }
+        } else {
+                print(CH_INFO, "memshare: Index %d is not active\n", index);
+        }
 }
 
 /* scan through the ctrl area and copy to local memory */
 static void populate_mem_proc(void)
 {
-	int i;
-	proc_entry *entry;
-	int sem, mode = 0;
+        int i;
+        proc_entry *entry;
+        int sem, mode = 0;
 
-	for (i = 0; i < NUMBER_OF_PROCS; i++) {
-		populate_mem_proc_single(i);
-	}
+        for (i = 0; i < NUMBER_OF_PROCS; i++) {
+                populate_mem_proc_single(i);
+        }
 }
 
 int check_proc_entry(int index)
 {
-	/* compare mem_entry with shared memory and se if process is active */
-	proc_entry *entry;
+        /* compare mem_entry with shared memory and se if process is active */
+        proc_entry *entry;
 
-	entry = (proc_entry *) get_proc_at(index);
+        entry = (proc_entry *) get_proc_at(index);
 
-	populate_mem_proc_single(index);
+        populate_mem_proc_single(index);
 
-	print(CH_DEBUG, "Check proc entry index %d active1 %d active2 %d\n",
-	      index, try_lock1(mem_entry[index].active), entry->active);
-	if (try_lock1(mem_entry[index].active)
-	    &&
-	    (!memcmp
-	     (mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE))
-	    && entry->active) {
-		return 1;
-	}
-	return 0;
+        print(CH_DEBUG, "Check proc entry index %d active1 %d active2 %d\n",
+              index, try_lock1(mem_entry[index].active), entry->active);
+        if (try_lock1(mem_entry[index].active)
+            &&
+            (!memcmp
+             (mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE))
+            && entry->active) {
+                return 1;
+        }
+        return 0;
 }
 
 static int clear_proc_entry(int index)
 {
-	proc_entry *entry;
-	print(CH_INFO, "memshare: Removes proc from entry and memlist\n");
-	entry = (proc_entry *) get_proc_at(index);
-	clear_shm(entry->key_shm, entry->size_shm);
-	entry->key_shm = 0;
-	entry->size_shm = 0;
-	mem_entry[index].shm = 0;
-	destroy_lock(entry->key_rlock);
-	entry->key_rlock = 0;
-	mem_entry[index].rlock = 0;
-	destroy_lock(entry->key_wlock);
-	entry->key_wlock = 0;
-	mem_entry[index].wlock = 0;
-	destroy_lock(entry->key_active);
-	entry->key_active = 0;
-	mem_entry[index].active = 0;
-	entry->active = 0;
-	return 0;
+        proc_entry *entry;
+        print(CH_INFO, "memshare: Removes proc from entry and memlist\n");
+        entry = (proc_entry *) get_proc_at(index);
+        clear_shm(entry->key_shm, entry->size_shm);
+        entry->key_shm = 0;
+        entry->size_shm = 0;
+        mem_entry[index].shm = 0;
+        destroy_lock(entry->key_rlock);
+        entry->key_rlock = 0;
+        mem_entry[index].rlock = 0;
+        destroy_lock(entry->key_wlock);
+        entry->key_wlock = 0;
+        mem_entry[index].wlock = 0;
+        destroy_lock(entry->key_active);
+        entry->key_active = 0;
+        mem_entry[index].active = 0;
+        entry->active = 0;
+        return 0;
 }
 
 /* This function will serach for a free entry in the ctrl area        */
 /* there it will fill all the keys that can be used to map shared mem */
 static int add_proc(char *name, int size)
 {
-	proc_entry *entry;
-	int index, key_base = 0, mode = 0;
+        proc_entry *entry;
+        int index, key_base = 0, mode = 0;
 
-	if ((index = get_next_free_index()) == NUMBER_OF_PROCS) {
-		return 1;
-	}
-	print(CH_DEBUG, "Addin my proc %s to index %d\n", name, index);
-	entry = get_proc_at(index);
-	key_base = index * 4 + SEM_CTRL_KEY;
-	entry->key_shm = key_base + 1;
-	entry->key_rlock = key_base + 2;
-	entry->key_wlock = key_base + 3;
-	entry->key_active = key_base + 4;
-	entry->size_shm = size;
-	my_index = index;
-	print(CH_DEBUG,
-	      "Allocating shared memory allocated for key %d size %d\n",
-	      entry->key_shm, entry->size_shm);
-	/* Map up yourself in the local memory map with pointers instead */
-	/* of keys                                                       */
-	if ((mem_entry[index].shm =
-	     get_shm(entry->key_shm, entry->size_shm, &mode)) == NULL) {
-		clear_proc_entry(index);
-		return 1;
-	}
-	print(CH_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
-	if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == 0) {
-		clear_proc_entry(index);
-		return 1;
-	}
-	if ((mem_entry[index].wlock = create_lock(entry->key_wlock, 1)) == 0) {
-		clear_proc_entry(index);
-		return 1;
-	}
-	if ((mem_entry[index].active = create_lock(entry->key_active, 0)) == 0) {
-		clear_proc_entry(index);
-		return 1;
-	}
-	set_active(mem_entry[index].active);
-	if (try_lock1(mem_entry[index].active))
-		print(CH_DEBUG, "Proc %s is now active at index %d\n", name,
-		      index);
-	strncpy(entry->proc_name, name, PROC_NAME_SIZE);
-	memcpy(mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE);
-	/* signal the entry active to use */
-	entry->active = 1;
+        if ((index = get_next_free_index()) == NUMBER_OF_PROCS) {
+                return 1;
+        }
+        print(CH_DEBUG, "Addin my proc %s to index %d\n", name, index);
+        entry = get_proc_at(index);
+        key_base = index * 4 + SEM_CTRL_KEY;
+        entry->key_shm = key_base + 1;
+        entry->key_rlock = key_base + 2;
+        entry->key_wlock = key_base + 3;
+        entry->key_active = key_base + 4;
+        entry->size_shm = size;
+        my_index = index;
+        print(CH_DEBUG,
+              "Allocating shared memory allocated for key %d size %d\n",
+              entry->key_shm, entry->size_shm);
+        /* Map up yourself in the local memory map with pointers instead */
+        /* of keys                                                       */
+        if ((mem_entry[index].shm =
+             get_shm(entry->key_shm, entry->size_shm, &mode)) == NULL) {
+                clear_proc_entry(index);
+                return 1;
+        }
+        print(CH_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
+        if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == 0) {
+                clear_proc_entry(index);
+                return 1;
+        }
+        if ((mem_entry[index].wlock = create_lock(entry->key_wlock, 1)) == 0) {
+                clear_proc_entry(index);
+                return 1;
+        }
+        if ((mem_entry[index].active = create_lock(entry->key_active, 0)) == 0) {
+                clear_proc_entry(index);
+                return 1;
+        }
+        set_active(mem_entry[index].active);
+        if (try_lock1(mem_entry[index].active))
+                print(CH_DEBUG, "Proc %s is now active at index %d\n", name,
+                      index);
+        strncpy(entry->proc_name, name, PROC_NAME_SIZE);
+        memcpy(mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE);
+        /* signal the entry active to use */
+        entry->active = 1;
 }
 
 static int start_listen_thread(void)
 {
-	pthread_attr_t tattr;
+        pthread_attr_t tattr;
 
-	pthread_attr_init(&tattr);
-	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
+        pthread_attr_init(&tattr);
+        pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+        pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
 
-	if (pthread_create(&recthread1_t, &tattr, recthread1, (void *)NULL) !=
-	    0) {
-		print(CH_ERROR, "memshare: Unable to create worker thread1\n");
-		return 1;
-	}
+        if (pthread_create(&recthread1_t, &tattr, recthread1, (void *)NULL) !=
+            0) {
+                print(CH_ERROR, "memshare: Unable to create worker thread1\n");
+                return 1;
+        }
 
-	if (pthread_create(&recthread2_t, &tattr, recthread2, (void *)NULL) !=
-	    0) {
-		print(CH_ERROR, "memshare: Unable to create worker thread2\n");
-		return 1;
-	}
+        if (pthread_create(&recthread2_t, &tattr, recthread2, (void *)NULL) !=
+            0) {
+                print(CH_ERROR, "memshare: Unable to create worker thread2\n");
+                return 1;
+        }
 }
 
 /********** the shared memory functions ***********/
 static int clear_shm(int key, int size)
 {
-	int shmid;
+        int shmid;
 
-	if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
-		print(CH_ERROR, "memshare: Unable get shared mem for key\n",
-		      key);
-		return 1;
-	}
-	shmctl(shmid, IPC_RMID, NULL);
-	return 0;
+        if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
+                print(CH_ERROR, "memshare: Unable get shared mem for key\n",
+                      key);
+                return 1;
+        }
+        shmctl(shmid, IPC_RMID, NULL);
+        return 0;
 }
 
 /* This function will try to map shared memory for an index(key)  */
@@ -515,286 +514,303 @@ static int clear_shm(int key, int size)
 /* created before                                                 */
 static char *get_shm(int key, int size, int *mode)
 {
-	int shmid;
-	char *data;
+        int shmid;
+        char *data;
 
-	if (*mode) {
-		if ((shmid =
-		     shmget(key, size, IPC_CREAT | IPC_EXCL | 0666)) < 0) {
-			/* already open */
-			*mode = 0;
-		} else {
-			print(CH_DEBUG, "Creates shared mem control area\n");
-		}
-	}
-	if (*mode == 0) {
-		if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
-			print(CH_ERROR, "memshare, Unable get shared mem\n");
-			return NULL;
-		}
-	}
+        if (*mode) {
+                if ((shmid =
+                     shmget(key, size, IPC_CREAT | IPC_EXCL | 0666)) < 0) {
+                        /* already open */
+                        *mode = 0;
+                } else {
+                        print(CH_DEBUG, "Creates shared mem control area\n");
+                }
+        }
+        if (*mode == 0) {
+                if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
+                        print(CH_ERROR, "memshare, Unable get shared mem\n");
+                        return NULL;
+                }
+        }
 
-	print(CH_INFO, "memshare: Key %d allocated with shmid %d\n", key,
-	      shmid);
-	if ((data = shmat(shmid, NULL, 0)) == (char *)-1) {
-		print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
-		return NULL;
-	}
-	return data;
+        print(CH_INFO, "memshare: Key %d allocated with shmid %d\n", key,
+              shmid);
+        if ((data = shmat(shmid, NULL, 0)) == (char *)-1) {
+                print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
+                return NULL;
+        }
+        return data;
 }
 
 static int get_next_free_index()
 {
-	int i;
+        int i;
 
-	for (i = 0; i < NUMBER_OF_PROCS; i++) {
-		if (!check_proc_entry(i)) {
-			return i;
-		}
-	}
-	return NUMBER_OF_PROCS;
+        for (i = 0; i < NUMBER_OF_PROCS; i++) {
+                if (!check_proc_entry(i)) {
+                        return i;
+                }
+        }
+        return NUMBER_OF_PROCS;
 }
 
 static proc_entry *get_proc_at(int index)
 {
-	char *tmp_ptr;
-	proc_entry *entry;
-	tmp_ptr = shm_ctrl_ptr + (SIZEOF_PROC_ENTRY * index);
-	entry = (proc_entry *) tmp_ptr;
-	return entry;
+        char *tmp_ptr;
+        proc_entry *entry;
+        tmp_ptr = shm_ctrl_ptr + (SIZEOF_PROC_ENTRY * index);
+        entry = (proc_entry *) tmp_ptr;
+        return entry;
 }
 
 static int get_proc_index(char *proc)
 {
-	int i;
+        int i;
 
-	for (i = 0; i < NUMBER_OF_PROCS; i++) {
-		if (check_proc_entry(i)) {
-			if (!strcmp(mem_entry[i].proc_name, proc)) {
-				return i;
-			}
-		}
-	}
-	return -1;
+        for (i = 0; i < NUMBER_OF_PROCS; i++) {
+                if (check_proc_entry(i)) {
+                        if (!strcmp(mem_entry[i].proc_name, proc)) {
+                                return i;
+                        }
+                }
+        }
+        return -1;
 }
 
 static int inc_sent(void)
 {
-	proc_entry *entry;
+        proc_entry *entry;
 
-	/* The locks might not be needed TODO */
-	lock(lock_ctrl_sem);
-	entry = (proc_entry *) get_proc_at(my_index);
-	entry->sent++;
-	unlock(lock_ctrl_sem);
-	return 0;
+        /* The locks might not be needed TODO */
+        lock(lock_ctrl_sem);
+        entry = (proc_entry *) get_proc_at(my_index);
+        entry->sent++;
+        unlock(lock_ctrl_sem);
+        return 0;
 }
 
 static int inc_received(void)
 {
-	proc_entry *entry;
+        proc_entry *entry;
 
-	/* The locks might not be needed TODO */
-	lock(lock_ctrl_sem);
-	entry = (proc_entry *) get_proc_at(my_index);
-	entry->sent++;
-	unlock(lock_ctrl_sem);
-	return 0;
+        /* The locks might not be needed TODO */
+        lock(lock_ctrl_sem);
+        entry = (proc_entry *) get_proc_at(my_index);
+        entry->sent++;
+        unlock(lock_ctrl_sem);
+        return 0;
 }
 
 int send_ack(int seq)
 {
-	return 0;
+        return 0;
 }
 
 /****************API***********************/
 
 int set_print_level(int level)
 {
-	if ((level == CH_ERROR) || (level == CH_INFO) || (level == CH_DEBUG)) {
-		current_level = level;
-		return 0;
-	}
-	return 1;
+        if ((level == CH_ERROR) || (level == CH_INFO) || (level == CH_DEBUG)) {
+                current_level = level;
+                return 0;
+        }
+        return 1;
 }
 
 void data_register(callback_data cbd)
 {
-	callbackdata = cbd;
+        callbackdata = cbd;
 }
 
 void signal1_register(callback_1 cb1)
 {
-	callback1 = cb1;
+        callback1 = cb1;
 }
 
 void signal2_register(callback_2 cb2)
 {
-	callback2 = cb2;
+        callback2 = cb2;
 }
 
 void signal3_register(callback_3 cb3)
 {
-	callback3 = cb3;
+        callback3 = cb3;
 }
 
-int init_memshare(char *proc_name, int size)
+int init_memshare(char *proc_name, int size, int proc)
 {
-	int ctrl_mode = 1;
+        int ctrl_mode = 1, src_process = 1;
+        print(CH_DEBUG, "init_memshare start\n");
 
-	memcpy(my_proc, proc_name, PROC_NAME_SIZE);
-    init_queues();
-	seize_queue(&queue_index, "memshare", 200);
+        /* check that the caller gives a size if he/she registers a proc */
+        if ((proc == 1) && (size < 1))
+                return 2;
 
-	/* clear the memory view */
-	init_mem_proc();
+        /* a source proc is a must */
+        if (proc_name == NULL)
+                return 3;
 
-	/* start off by locking the ctrl lock */
-	if ((lock_ctrl_sem = create_lock(SEM_CTRL_KEY, 1)) == 0) {
-		print(CH_ERROR, "memshare: Unable to create semaphore\n");
-		return 1;
-	}
-	print(CH_DEBUG, "Created ctrl lock\n");
+        memcpy(my_proc, proc_name, PROC_NAME_SIZE);
 
-	lock(lock_ctrl_sem);
-	print(CH_DEBUG, "Locked ctrl\n");
+        if (proc) {
+                init_queues();
+                seize_queue(&queue_index, "memshare", 200);
+        }
 
-	/* map up the ctrl area */
-	if ((shm_ctrl_ptr = get_shm(SHM_CTRL_KEY, CTRL_SIZE, &ctrl_mode)) == 0) {
-		print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
-		return 1;
-	}
+        /* clear the memory view */
+        init_mem_proc();
 
-	populate_mem_proc();
+        /* start off by locking the ctrl lock */
+        if ((lock_ctrl_sem = create_lock(SEM_CTRL_KEY, 1)) == 0) {
+                print(CH_ERROR, "memshare: Unable to create semaphore\n");
+                return 1;
+        }
+        print(CH_DEBUG, "Created ctrl lock\n");
 
-	add_proc(proc_name, size);
+        lock(lock_ctrl_sem);
+        print(CH_DEBUG, "init_memshare ctrl\n");
 
-	unlock(lock_ctrl_sem);
+        /* map up the ctrl area */
+        if ((shm_ctrl_ptr = get_shm(SHM_CTRL_KEY, CTRL_SIZE, &ctrl_mode)) == 0) {
+                print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
+                return 1;
+        }
+        print(CH_DEBUG, "init_memshare: populate memproc\n");
+        populate_mem_proc();
 
-	start_listen_thread();
+        if (proc)
+                add_proc(proc_name, size);
 
-    initialized = 1;
+        unlock(lock_ctrl_sem);
+        print(CH_DEBUG, "init_memshare:unlock ctrl\n");
+
+        if (proc)
+                start_listen_thread();
+        print(CH_DEBUG, "init_memshare done\n");
+        initialized = 1;
 }
 
 int data(char *proc, char *data, int len)
 {
-	int index;
-	header hdr;
-    if (!initialized)
-        return 2;
-	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
-		return 1;
-	}
-	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending data to %s at index %d\n", proc, index);
-	lock(mem_entry[index].wlock);
-	hdr.msg_type = DATA;
-	hdr.msg_len = len;
-	hdr.seq = sequence++;
-	memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
-	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
-	memcpy((mem_entry[index].shm + SIZEOF_HEADER), data, len);
-	inc_sent();
-	unlock(mem_entry[index].rlock);
-	return 0;
+        int index;
+        header hdr;
+        if (!initialized)
+                return 2;
+        if ((index = get_proc_index(proc)) < 0) {
+                print(CH_INFO, "memshare: No such process %s\n", proc);
+                return 1;
+        }
+        /*populate_mem_proc_single(index); */
+        print(CH_DEBUG, "Sending data to %s at index %d\n", proc, index);
+        lock(mem_entry[index].wlock);
+        hdr.msg_type = DATA;
+        hdr.msg_len = len;
+        hdr.seq = sequence++;
+        memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
+        memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
+        memcpy((mem_entry[index].shm + SIZEOF_HEADER), data, len);
+        inc_sent();
+        unlock(mem_entry[index].rlock);
+        return 0;
 }
 
 /* return 1 the process isn't connected */
 int signal1(char *proc, int data1)
 {
-	int index;
-	header hdr;
-	signal sig;
+        int index;
+        header hdr;
+        signal sig;
 
-    if (!initialized)
-        return 2;
-	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
-		return 1;
-	}
-	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
-	lock(mem_entry[index].wlock);
-	hdr.msg_type = SIGNAL1;
-	hdr.msg_len = SIZEOF_SIGNAL;
-	hdr.seq = sequence++;
-	memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
-	sig.signal1 = data1;
-	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
-	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	/*inc_sent(); */
-	unlock(mem_entry[index].rlock);
-	return 0;
+        print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+        if (!initialized)
+                return 2;
+        if ((index = get_proc_index(proc)) < 0) {
+                print(CH_INFO, "memshare: No such process %s\n", proc);
+                return 1;
+        }
+        /*populate_mem_proc_single(index); */
+        print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+        lock(mem_entry[index].wlock);
+        hdr.msg_type = SIGNAL1;
+        hdr.msg_len = SIZEOF_SIGNAL;
+        hdr.seq = sequence++;
+        memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
+        sig.signal1 = data1;
+        memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
+        memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
+        /*inc_sent(); */
+        unlock(mem_entry[index].rlock);
+        return 0;
 }
 
 int signal2(char *proc, int data1, int data2)
 {
-	int index;
-	header hdr;
-	signal sig;
+        int index;
+        header hdr;
+        signal sig;
 
-    if (!initialized)
-        return 2;
-	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
-		return 1;
-	}
-	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
-	lock(mem_entry[index].wlock);
-	hdr.msg_type = SIGNAL2;
-	hdr.msg_len = SIZEOF_SIGNAL;
-	hdr.seq = sequence++;
-	memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
-	sig.signal1 = data1;
-	sig.signal2 = data2;
-	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
-	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	/*inc_sent(); */
-	unlock(mem_entry[index].rlock);
-	return 0;
+        if (!initialized)
+                return 2;
+        if ((index = get_proc_index(proc)) < 0) {
+                print(CH_INFO, "memshare: No such process %s\n", proc);
+                return 1;
+        }
+        /*populate_mem_proc_single(index); */
+        print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+        lock(mem_entry[index].wlock);
+        hdr.msg_type = SIGNAL2;
+        hdr.msg_len = SIZEOF_SIGNAL;
+        hdr.seq = sequence++;
+        memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
+        sig.signal1 = data1;
+        sig.signal2 = data2;
+        memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
+        memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
+        /*inc_sent(); */
+        unlock(mem_entry[index].rlock);
+        return 0;
 }
 
 int signal3(char *proc, int data1, int data2, int data3)
 {
-	int index;
-	header hdr;
-	signal sig;
+        int index;
+        header hdr;
+        signal sig;
 
-    if (!initialized)
-        return 2;
-	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
-		return 1;
-	}
-	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
-	lock(mem_entry[index].wlock);
-	hdr.msg_type = SIGNAL3;
-	hdr.msg_len = SIZEOF_SIGNAL;
-	hdr.seq = sequence++;
-	memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
-	sig.signal1 = data1;
-	sig.signal2 = data2;
-	sig.signal3 = data3;
-	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
-	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	/*inc_sent(); */
-	unlock(mem_entry[index].rlock);
-	return 0;
+        if (!initialized)
+                return 2;
+        if ((index = get_proc_index(proc)) < 0) {
+                print(CH_INFO, "memshare: No such process %s\n", proc);
+                return 1;
+        }
+        /*populate_mem_proc_single(index); */
+        print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+        lock(mem_entry[index].wlock);
+        hdr.msg_type = SIGNAL3;
+        hdr.msg_len = SIZEOF_SIGNAL;
+        hdr.seq = sequence++;
+        memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
+        sig.signal1 = data1;
+        sig.signal2 = data2;
+        sig.signal3 = data3;
+        memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
+        memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
+        /*inc_sent(); */
+        unlock(mem_entry[index].rlock);
+        return 0;
 }
 
-int get_datasize(char *proc) {
-    int index;
-    proc_entry *entry;
-    
-    if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
-		return 0;
-	}
-	entry = get_proc_at(index);
-    return (entry->size_shm);
+int get_datasize(char *proc)
+{
+        int index;
+        proc_entry *entry;
+
+        if ((index = get_proc_index(proc)) < 0) {
+                print(CH_INFO, "memshare: No such process %s\n", proc);
+                return 0;
+        }
+        entry = get_proc_at(index);
+        return (entry->size_shm);
 }
 
  /*
