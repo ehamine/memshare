@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         }
 
         /*set_print_level(CH_DEBUG); */
-        init_memshare("memsend", 0, 0);
+        init_memshare("memsend", 0);
 
         switch (mode) {
         case 1:

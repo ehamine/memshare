@@ -637,22 +637,21 @@ void signal3_register(callback_3 cb3)
         callback3 = cb3;
 }
 
-int init_memshare(char *proc_name, int size, int proc)
+int init_memshare(char *proc_name, int size)
 {
         int ctrl_mode = 1, src_process = 1;
         print(CH_DEBUG, "init_memshare start\n");
 
-        /* check that the caller gives a size if he/she registers a proc */
-        if ((proc == 1) && (size < 1))
-                return 2;
 
+        if (initialized)
+                return 1;
         /* a source proc is a must */
         if (proc_name == NULL)
-                return 3;
+                return 2;
 
         memcpy(my_proc, proc_name, PROC_NAME_SIZE);
 
-        if (proc) {
+        if (size) {
                 init_queues();
                 seize_queue(&queue_index, "memshare", 200);
         }
@@ -673,18 +672,18 @@ int init_memshare(char *proc_name, int size, int proc)
         /* map up the ctrl area */
         if ((shm_ctrl_ptr = get_shm(SHM_CTRL_KEY, CTRL_SIZE, &ctrl_mode)) == 0) {
                 print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
-                return 1;
+                return 3;
         }
         print(CH_DEBUG, "init_memshare: populate memproc\n");
         populate_mem_proc();
 
-        if (proc)
+        if (size)
                 add_proc(proc_name, size);
 
         unlock(lock_ctrl_sem);
         print(CH_DEBUG, "init_memshare:unlock ctrl\n");
 
-        if (proc)
+        if (size)
                 start_listen_thread();
         print(CH_DEBUG, "init_memshare done\n");
         initialized = 1;

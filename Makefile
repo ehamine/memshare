@@ -1,7 +1,7 @@
 INC=-Iinc/
 CC=gcc
 
-all: out/libmemshare.a out/proc out/main out/memsend
+all: out/libmemshare.a out/reply out/main out/memsend
 
 out/memshare.o: src/memshare.c
 	$(CC) -o $@ -shared -c $(INC) $<
@@ -11,11 +11,11 @@ out/queue.o: src/queue.c
 out/libmemshare.a: out/memshare.o out/queue.o
 	ar -rcs $@ out/memshare.o out/queue.o
 
-out/proc: src/test/proc.c
+out/reply: src/test/reply.c
 	$(CC) $(INC) -o $@ $< out/libmemshare.a -lpthread
 
 out/main: src/test/main.c
-	$(CC) $(INC) -o $@ $<
+	$(CC) $(INC) -o $@ $< out/libmemshare.a -lpthread
 
 out/memsend: src/memsend.c
 	$(CC) $(INC) -o $@ $< out/libmemshare.a -lpthread
