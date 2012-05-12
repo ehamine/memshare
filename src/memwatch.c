@@ -1,4 +1,4 @@
-/* Memshare, quick and easy IPC.                                                   */
+//* Memshare, quick and easy IPC.                                                   */
 /* Copyright (C) 2012  Tommy Wiklund                                               */
 
 /* This program is free software; you can redistribute it and/or                   */
@@ -24,63 +24,39 @@
 
 void print_usage()
 {
-	printf("Usage: memsend [arguments]\n");
-	printf("\t-s1 <proc name> <integer>\n");
-	printf("\t-s2 <proc name> <integer> <integer>\n");
-	printf("\t-s3 <proc name> <integer> <integer> <integer>\n");
-	printf("\t-d <proc name> <data>\n");
+	printf("Usage: memwatch [arguments]\n");
+	printf("\t-l\t\tList every proc registered\n");
+	printf("\t-ld <proc name>\t\tList detailed info of proc\n");
 	printf("\tv 1.0\n");
 }
 
 int main(int argc, char *argv[])
 {
-	int value1, value2, value3, mode = 0, retvalue, data_size;
-	char dest_proc[PROC_NAME_SIZE], *datastr;
+	int send, rec, data_size, mode = 0, retvalue, index, i;
+	proc_entry *entry;
+	char dest_proc[PROC_NAME_SIZE], *datastr, *procptr;
 
 	memset(dest_proc, '\0', PROC_NAME_SIZE);
+	printf("argc %d\n", argc);
 	/* Parse the parameters */
-	if (argc < 4) {
+	if (argc < 2) {
 		print_usage();
 		exit(2);
 	}
-	if (!strcmp(argv[1], "-s1")) {
-		if (argc != 4) {
+	if (!strcmp(argv[1], "-l")) {
+		if (argc != 2) {
 			print_usage();
 			exit(2);
 		}
 		mode = 1;
-		value1 = atoi(argv[3]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
-	} else if (!strcmp(argv[1], "-s2")) {
-		if (argc != 5) {
+	} else if (!strcmp(argv[1], "-ld")) {
+		if (argc != 3) {
 			print_usage();
 			exit(2);
 		}
 		mode = 2;
-		value1 = atoi(argv[3]);
-		value2 = atoi(argv[4]);
 		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
-	} else if (!strcmp(argv[1], "-s3")) {
-		if (argc != 6) {
-			print_usage();
-			exit(2);
-		}
-		mode = 3;
-		value1 = atoi(argv[3]);
-		value2 = atoi(argv[4]);
-		value3 = atoi(argv[5]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
-	} else if (!strcmp(argv[1], "-d")) {
-		if (argc != 4) {
-			print_usage();
-			exit(2);
-		}
-		mode = 4;
-		data_size = strlen(argv[3]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
-		datastr = malloc(data_size);
-		strncpy(datastr, argv[3], data_size);
-	}
+	} 
 	if (mode == 0) {
 		print_usage();
 		exit(3);
@@ -90,21 +66,24 @@ int main(int argc, char *argv[])
 	init_memshare("memsend", 0);
 
 	switch (mode) {
-	case 1:
-		retvalue = signal1(dest_proc, value1);
-		break;
-
 	case 2:
-		retvalue = signal2(dest_proc, value1, value2);
+		if ((index = get_proc_index(dest_proc)) != -1) {
+		  get_proc_info(index, &send, &rec, &data_size, &procptr);
+			printf("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n", index, procptr, send, rec, data_size);
+			exit(0);
+		}
+		printf("No such process %s\n", dest_proc);
+		exit(1);
 		break;
 
-	case 3:
-		retvalue = signal3(dest_proc, value1, value2, value3);
-		break;
-
-	case 4:
-		retvalue = data(dest_proc, datastr, data_size);
-		free(datastr);
+	case 1:
+		for (i=0;i<NUMBER_OF_PROCS;i++) {
+			if (check_proc_entry(i)) {
+			  get_proc_info(i, &send, &rec, &data_size, &procptr);
+				printf("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n", i, procptr, send, rec, data_size);
+			}
+		}
+		exit(0);
 		break;
 
 	default:
@@ -112,15 +91,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 
-	if (retvalue == 0)
-		exit(0);
-
-	if (retvalue == 1) {
-		printf("The destination process %s is not present!\n",
-		       dest_proc);
-		exit(1);
-	}
-
 	/* No place to be */
 	exit(2);
 }
+
