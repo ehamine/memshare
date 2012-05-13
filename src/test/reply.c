@@ -41,10 +41,10 @@ void signal1_callback(char *proc, int value)
 {
 	int retvalue = 0;
 	if (value == 666) {
-	  system("./memsend -s1 memshare 8");
-	  system("./memsend -s2 memshare 12 24");
-	  system("./memsend -s3 memshare 48 96 192");
-	  return;
+		system("./memsend -s1 memshare 8");
+		system("./memsend -s2 memshare 12 24");
+		system("./memsend -s3 memshare 48 96 192");
+		return;
 	}
 	if ((retvalue = signal1(proc, value)))
 		printf("replay:signal1 failed with %d\n", retvalue);

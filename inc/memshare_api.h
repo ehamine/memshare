@@ -7,15 +7,14 @@
  *
  */
 
-typedef void (*callback_1) (char*, int);
-typedef void (*callback_2) (char*, int, int);
-typedef void (*callback_3) (char*, int, int, int);
-typedef void (*callback_data) (char*, char*, int);
+typedef void (*callback_1) (char *, int);
+typedef void (*callback_2) (char *, int, int);
+typedef void (*callback_3) (char *, int, int, int);
+typedef void (*callback_data) (char *, char *, int);
 
 #define CH_ERROR 0
 #define CH_INFO  1
 #define CH_DEBUG 2
-
 
 /*****************************************************************************/
 /* Function Name      : set_print_level                                      */
@@ -25,7 +24,6 @@ typedef void (*callback_data) (char*, char*, int);
 /* Return Value(s)    : 0 ok                                                 */
 /*****************************************************************************/
 int set_print_level(int);
-
 
 /*****************************************************************************/
 /* Function Name      : init_memshare                                        */
@@ -40,8 +38,7 @@ int set_print_level(int);
 /*                      2 register a proc without allocation size            */
 /*                      3 A NULL pointer as a proc name                      */
 /*****************************************************************************/
-int init_memshare(char*, int);
-
+int init_memshare(char *, int);
 
 /*****************************************************************************/
 /* Function Name      : data_register                                        */
@@ -53,7 +50,6 @@ int init_memshare(char*, int);
 /*****************************************************************************/
 void data_register(callback_data);
 
-
 /*****************************************************************************/
 /* Function Name      : signal1_register                                     */
 /* Description        : This function registers a function that will be      */
@@ -63,7 +59,6 @@ void data_register(callback_data);
 /* Return Value(s)    : None.                                                */
 /*****************************************************************************/
 void signal1_register(callback_1);
-
 
 /*****************************************************************************/
 /* Function Name      : signal2_register                                     */
@@ -75,7 +70,6 @@ void signal1_register(callback_1);
 /*****************************************************************************/
 void signal2_register(callback_2);
 
-
 /*****************************************************************************/
 /* Function Name      : signal3_register                                     */
 /* Description        : This function registers a function that will be      */
@@ -85,7 +79,6 @@ void signal2_register(callback_2);
 /* Return Value(s)    : None.                                                */
 /*****************************************************************************/
 void signal3_register(callback_3);
-
 
 /*****************************************************************************/
 /* Function Name      : data                                                 */
@@ -98,7 +91,7 @@ void signal3_register(callback_3);
 /*                      1 No dest process process available                  */
 /*                      2 Memshare not initialized                           */
 /*****************************************************************************/
-int data(char*, char*, int);
+int data(char *, char *, int);
 
 /*****************************************************************************/
 /* Function Name      : signal1                                              */
@@ -110,7 +103,7 @@ int data(char*, char*, int);
 /*                      1 No dest process process available                  */
 /*                      2 Memshare not initialized                           */
 /*****************************************************************************/
-int signal1(char*, int);
+int signal1(char *, int);
 
 /*****************************************************************************/
 /* Function Name      : signal2                                              */
@@ -122,7 +115,7 @@ int signal1(char*, int);
 /*                      1 No dest process process available                  */
 /*                      2 Memshare not initialized                           */
 /*****************************************************************************/
-int signal2(char*, int, int);
+int signal2(char *, int, int);
 
 /*****************************************************************************/
 /* Function Name      : signal3                                              */
@@ -135,7 +128,7 @@ int signal2(char*, int, int);
 /*                      1 No dest process process available                  */
 /*                      2 Memshare not initialized                           */
 /*****************************************************************************/
-int signal3(char*, int, int, int);
+int signal3(char *, int, int, int);
 
 /*****************************************************************************/
 /* Function Name      : get_datasize                                         */
@@ -146,4 +139,4 @@ int signal3(char*, int, int, int);
 /* Return Value(s)    : 0 No such process                                    */
 /*                      n The max size in bytes that can be sent with data   */
 /*****************************************************************************/
-int get_datasize(char*);
+int get_datasize(char *);

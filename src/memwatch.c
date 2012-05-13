@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	char dest_proc[PROC_NAME_SIZE], *datastr, *procptr;
 
 	memset(dest_proc, '\0', PROC_NAME_SIZE);
-	printf("argc %d\n", argc);
+
 	/* Parse the parameters */
 	if (argc < 2) {
 		print_usage();
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 		}
 		mode = 2;
 		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
-	} 
+	}
 	if (mode == 0) {
 		print_usage();
 		exit(3);
@@ -68,8 +68,10 @@ int main(int argc, char *argv[])
 	switch (mode) {
 	case 2:
 		if ((index = get_proc_index(dest_proc)) != -1) {
-		  get_proc_info(index, &send, &rec, &data_size, &procptr);
-			printf("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n", index, procptr, send, rec, data_size);
+			get_proc_info(index, &send, &rec, &data_size, &procptr);
+			printf
+			    ("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n",
+			     index, procptr, send, rec, data_size);
 			exit(0);
 		}
 		printf("No such process %s\n", dest_proc);
@@ -77,10 +79,13 @@ int main(int argc, char *argv[])
 		break;
 
 	case 1:
-		for (i=0;i<NUMBER_OF_PROCS;i++) {
+		for (i = 0; i < NUMBER_OF_PROCS; i++) {
 			if (check_proc_entry(i)) {
-			  get_proc_info(i, &send, &rec, &data_size, &procptr);
-				printf("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n", i, procptr, send, rec, data_size);
+				get_proc_info(i, &send, &rec, &data_size,
+					      &procptr);
+				printf
+				    ("Index %d\t\t%s\tSent %d\tReceived %d, Data size of %d\n",
+				     i, procptr, send, rec, data_size);
 			}
 		}
 		exit(0);
@@ -94,4 +99,3 @@ int main(int argc, char *argv[])
 	/* No place to be */
 	exit(2);
 }
-

@@ -814,7 +814,8 @@ int get_datasize(char *proc)
 	return (entry->size_shm);
 }
 
-int get_proc_info(int index, int *send_count, int *rec_count, int *data_size, char **procptr)
+int get_proc_info(int index, int *send_count, int *rec_count, int *data_size,
+		  char **procptr)
 {
 	proc_entry *entry;
 

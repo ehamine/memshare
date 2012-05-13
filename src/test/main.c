@@ -313,10 +313,10 @@ int test_six()
 	int retvalue;
 	mode = 4;
 	count = 0;
-	
+
 	if ((retvalue = signal1("reply", 666)) != 0) {
-	  printf("Test 6,0 failed return value %d\n", retvalue);
-	  return 1;
+		printf("Test 6,0 failed return value %d\n", retvalue);
+		return 1;
 	}
 
 	sleep(3);
@@ -328,7 +328,6 @@ int test_six()
 		return 1;
 	}
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -361,7 +360,7 @@ int main(int argc, char *argv[])
 		exit(1);
 
 	if (test_five(LARGE_NUM))
-	        exit(1);
+		exit(1);
 
 	if (test_six())
 		exit(1);
