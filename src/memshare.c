@@ -689,6 +689,7 @@ int init_memshare(char *proc_name, int size)
 		start_listen_thread();
 	print(CH_DEBUG, "init_memshare done\n");
 	initialized = 1;
+	return 0;
 }
 
 int data(char *proc, char *data, int len)
