@@ -209,7 +209,7 @@ static int create_lock(int key, int value)
 		mode = 1;
 		if ((sem = semget(key, 1, IPC_CREAT | 0666)) == -1) {
 			print(CH_ERROR, "Unable to create semaphore\n");
-			return 0;
+			return -1;
 		}
 	}
 
@@ -223,7 +223,7 @@ static int create_lock(int key, int value)
 		if (semctl(sem, 0, SETVAL, ctrl) == -1) {
 			print(CH_ERROR,
 			      "memshare: Unable to initialize semaphore\n");
-			return 0;
+			return -1;
 		}
 	}
 	return sem;
@@ -317,7 +317,7 @@ static void populate_mem_proc_single(int index)
 	entry = (proc_entry *) get_proc_at(index);
 	if (entry->active) {
 		/* this entry should be active, if not it has crached and should be garbage collected */
-		if ((sem = create_lock(entry->key_active, 0)) != 0) {
+		if ((sem = create_lock(entry->key_active, 0)) != -1) {
 			if (try_lock1(sem)) {
 				print(CH_DEBUG, "Index %d is active by %s\n",
 				      index, entry->proc_name);
@@ -334,7 +334,7 @@ static void populate_mem_proc_single(int index)
 					return;
 				}
 				if ((mem_entry[index].rlock =
-				     create_lock(entry->key_rlock, 0)) == 0) {
+				     create_lock(entry->key_rlock, 0)) == -1) {
 					/* garbage collect, they should have valid keys */
 					print(CH_ERROR,
 					      "memshare: Unable to create rlock\n");
@@ -342,7 +342,7 @@ static void populate_mem_proc_single(int index)
 					return;
 				}
 				if ((mem_entry[index].wlock =
-				     create_lock(entry->key_wlock, 0)) == 0) {
+				     create_lock(entry->key_wlock, 0)) == -1) {
 					/* garbage collect, they should have valid keys */
 					print(CH_ERROR,
 					      "memshare: Unable to create wlock\n");
@@ -451,15 +451,15 @@ static int add_proc(char *name, int size)
 		return 1;
 	}
 	print(CH_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
-	if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == 0) {
+	if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == -1) {
 		clear_proc_entry(index);
 		return 1;
 	}
-	if ((mem_entry[index].wlock = create_lock(entry->key_wlock, 1)) == 0) {
+	if ((mem_entry[index].wlock = create_lock(entry->key_wlock, 1)) == -1) {
 		clear_proc_entry(index);
 		return 1;
 	}
-	if ((mem_entry[index].active = create_lock(entry->key_active, 0)) == 0) {
+	if ((mem_entry[index].active = create_lock(entry->key_active, 0)) == -1) {
 		clear_proc_entry(index);
 		return 1;
 	}
@@ -662,7 +662,7 @@ int init_memshare(char *proc_name, int size)
 	init_mem_proc();
 
 	/* start off by locking the ctrl lock */
-	if ((lock_ctrl_sem = create_lock(SEM_CTRL_KEY, 1)) == 0) {
+	if ((lock_ctrl_sem = create_lock(SEM_CTRL_KEY, 1)) == -1) {
 		print(CH_ERROR, "memshare: Unable to create semaphore\n");
 		return 1;
 	}
