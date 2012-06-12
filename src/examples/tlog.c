@@ -21,7 +21,7 @@
 #include <syslog.h>
 #include <stdarg.h>
 #include <string.h>
-#include "tlog.h"
+#include "tlog_api.h"
 
 #define SHMEMSIZE 50
 
