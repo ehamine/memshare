@@ -95,7 +95,6 @@ static void *recthread2(void *arg)
 	header *hdr;
 	signal *sig;
 	char *msg;
-	int value1;
 
 	for (;;) {
 		msg = qget(queue_index);
@@ -159,6 +158,7 @@ static void *recthread2(void *arg)
 			break;
 		}
 	}
+	return (void*)0;
 }
 
 static void *recthread1(void *arg)
@@ -188,6 +188,7 @@ static void *recthread1(void *arg)
 		}
 		unlock(mem_entry[my_index].wlock);
 	}
+	return (void*)0;
 }
 
 /********** ipc semaphore functions
@@ -273,14 +274,15 @@ static void set_active(int sem)
 	semop(sem, op, 1);
 }
 
-static void clear_active(int sem)
+/* Should be used when leaving gracefully */
+/*static void clear_active(int sem)
 {
 	struct sembuf op[1];
 	op[0].sem_num = 0;
 	op[0].sem_op = -1;
 	op[0].sem_flg = 0;
 	semop(sem, op, 1);
-}
+}*/
 
 static int try_lock1(int sem)
 {
@@ -368,8 +370,6 @@ static void populate_mem_proc_single(int index)
 static void populate_mem_proc(void)
 {
 	int i;
-	proc_entry *entry;
-	int sem, mode = 0;
 
 	for (i = 0; i < NUMBER_OF_PROCS; i++) {
 		populate_mem_proc_single(i);
@@ -471,6 +471,7 @@ static int add_proc(char *name, int size)
 	memcpy(mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE);
 	/* signal the entry active to use */
 	entry->active = 1;
+	return 0;
 }
 
 static int start_listen_thread(void)
@@ -492,6 +493,7 @@ static int start_listen_thread(void)
 		print(CH_ERROR, "memshare: Unable to create worker thread2\n");
 		return 1;
 	}
+	return 0;
 }
 
 /********** the shared memory functions ***********/
@@ -642,7 +644,7 @@ void signal3_register(callback_3 cb3)
 
 int init_memshare(char *proc_name, int size)
 {
-	int ctrl_mode = 1, src_process = 1;
+	int ctrl_mode = 1;
 	print(CH_DEBUG, "init_memshare start\n");
 
 	if (initialized)
@@ -723,7 +725,6 @@ int signal1(char *proc, int data1)
 	header hdr;
 	signal sig;
 
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
 	if (!initialized)
 		return 2;
 	if ((index = get_proc_index(proc)) < 0) {

@@ -331,7 +331,6 @@ int test_six()
 
 int main(int argc, char *argv[])
 {
-	int i;
 	system("./reply reply &");
 	sleep(1);
 

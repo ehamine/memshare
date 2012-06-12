@@ -32,9 +32,8 @@ void print_usage()
 
 int main(int argc, char *argv[])
 {
-	int send, rec, data_size, mode = 0, retvalue, index, i;
-	proc_entry *entry;
-	char dest_proc[PROC_NAME_SIZE], *datastr, *procptr;
+	int send, rec, data_size, mode = 0, index, i;
+	char dest_proc[PROC_NAME_SIZE], *procptr;
 
 	memset(dest_proc, '\0', PROC_NAME_SIZE);
 

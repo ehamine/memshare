@@ -35,7 +35,7 @@ void tsyslog(int, const char *, ...);
 /* Input(s)           : int priority according to syslog.h                   */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
-/*                    : 1 it has to be initalized first                      *
+/*                    : 1 it has to be initalized first                      */
 /*****************************************************************************/
 int tsyslog_set(int);
 
@@ -45,7 +45,7 @@ int tsyslog_set(int);
 /* Input(s)           : int priority according to syslog.h                   */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
-/*                    : 1 it has to be initalized first                      *
+/*                    : 1 it has to be initalized first                      */
 /*****************************************************************************/
 int tsyslog_del(int);
 
@@ -55,7 +55,7 @@ int tsyslog_del(int);
 /* Input(s)           : int priority according to syslog.h                   */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
-/*                    : 1 it has to be initalized first                      *
+/*                    : 1 it has to be initalized first                      */
 /*****************************************************************************/
 int tsyslog_replace(int);
 

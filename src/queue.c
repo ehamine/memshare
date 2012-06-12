@@ -19,8 +19,8 @@
 #include "queue.h"
 
 sem_t qlock[NUM_OF_QUEUES], seize_lock;
-pthread_mutex_t condition_mutex[NUM_OF_QUEUES] = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t condition_cond[NUM_OF_QUEUES] = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t condition_mutex[NUM_OF_QUEUES];
+pthread_cond_t condition_cond[NUM_OF_QUEUES];
 int low_bottom[NUM_OF_QUEUES], low_top[NUM_OF_QUEUES];
 int low_totalsize[NUM_OF_QUEUES], low_state[NUM_OF_QUEUES];
 int hi_bottom[NUM_OF_QUEUES], hi_top[NUM_OF_QUEUES];
@@ -51,6 +51,8 @@ int init_queues()
 		if ((seize_queue_name[i] = malloc(100)) == 0) {
 			return 1;
 		}
+		pthread_mutex_init(&condition_mutex[i], NULL);
+		pthread_cond_init(&condition_cond[i], NULL);
 	}
 	queue_state = 1;
 	return 0;
@@ -278,7 +280,7 @@ static char *getloq(int index)
 
 char *qget(int index)
 {
-	char *retval;
+	char *retval=0;
 	static int count;
 
 	pthread_mutex_lock(&condition_mutex[index]);

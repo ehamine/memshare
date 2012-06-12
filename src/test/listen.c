@@ -48,7 +48,6 @@ void signal3_callback(char *proc, int value1, int value2, int value3)
 
 int main(int argc, char *argv[])
 {
-	int val, temp1, temp2;
 	procname = malloc(256);
 	strncpy(procname, argv[1], 256);
 

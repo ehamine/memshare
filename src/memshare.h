@@ -83,4 +83,8 @@ typedef struct {
 } proc_entry;
 #define SIZEOF_PROC_ENTRY sizeof(proc_entry)
 
+int get_proc_info(int, int*, int*, int*, char**);
+int get_proc_index(char*);
+int check_proc_entry(int);
+
 #endif				/* _MEMSHARE_H */
