@@ -11,6 +11,7 @@
 #define _MEMSHARE_H
 
 #include <pthread.h>
+#include "memshare_api.h"
 
 #define  CTRL_SIZE   1024
 #define  SHM_CTRL_KEY  42
@@ -31,7 +32,6 @@
 
 #define ACK      100
 
-#define PROC_NAME_SIZE 20
 #define NUMBER_OF_PROCS 10
 #define QUEUE_SIZE 500
 

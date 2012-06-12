@@ -7,10 +7,15 @@
  *
  */
 
+#ifndef _MEMSHARE_API_H
+#define _MEMSHARE_API_H
+
 typedef void (*callback_1) (char *, int);
 typedef void (*callback_2) (char *, int, int);
 typedef void (*callback_3) (char *, int, int, int);
 typedef void (*callback_data) (char *, char *, int);
+
+#define PROC_NAME_SIZE 20
 
 #define CH_ERROR 0
 #define CH_INFO  1
@@ -140,3 +145,5 @@ int signal3(char *, int, int, int);
 /*                      n The max size in bytes that can be sent with data   */
 /*****************************************************************************/
 int get_datasize(char *);
+
+#endif				/* _MEMSHARE_API_H */
