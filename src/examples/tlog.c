@@ -25,6 +25,7 @@
 #include "tlog_api.h"
 
 #define SHMEMSIZE 50
+#define QUEUESIZE 512
 
 int init = 0;
 int mask = 0;
@@ -108,7 +109,7 @@ int tsyslog_init(char *name)
 	strncpy(tproc, name, PROC_NAME_SIZE);
 
 	/* we don't need much space */
-	if (init_memshare(tproc, SHMEMSIZE) != 0)
+	if (init_memshare(tproc, SHMEMSIZE, 512) != 0)
 		return 2;
 
 	/* register the callback */

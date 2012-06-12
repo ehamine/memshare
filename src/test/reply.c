@@ -23,6 +23,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#define SHMEMSIZE 512
+#define QUEUESIZE 800
+
 int state = 0;
 char *procname;
 
@@ -72,7 +75,7 @@ int main(int argc, char *argv[])
 	set_print_level(0);
 	printf("%s started\n", procname);
 
-	if (init_memshare(procname, 512)) {
+	if (init_memshare(procname, SHMEMSIZE, QUEUESIZE)) {
 		printf("Failed to init memshare\n");
 		exit(1);
 	}

@@ -642,7 +642,7 @@ void signal3_register(callback_3 cb3)
 	callback3 = cb3;
 }
 
-int init_memshare(char *proc_name, int size)
+int init_memshare(char *proc_name, int size, int qsize)
 {
 	int ctrl_mode = 1;
 	print(CH_DEBUG, "init_memshare start\n");
@@ -657,7 +657,7 @@ int init_memshare(char *proc_name, int size)
 
 	if (size) {
 		init_queues();
-		seize_queue(&queue_index, "memshare", QUEUE_SIZE);
+		seize_queue(&queue_index, "memshare", qsize);
 	}
 
 	/* clear the memory view */

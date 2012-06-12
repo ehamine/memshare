@@ -36,6 +36,7 @@ int set_print_level(int);
 /* Input(s)           : proc name(string 20 char)                            */
 /*                      Size of memory for receiving buffer, null means that */
 /*                      the proccess will not register for receive(int byte) */
+/*                      The queue size as buffer for receiving (int entries) */
 /*                                                                           */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
@@ -43,7 +44,7 @@ int set_print_level(int);
 /*                      2 register a proc without allocation size            */
 /*                      3 A NULL pointer as a proc name                      */
 /*****************************************************************************/
-int init_memshare(char *, int);
+int init_memshare(char *, int, int);
 
 /*****************************************************************************/
 /* Function Name      : data_register                                        */

@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #define SHMEMSIEZ  512
+#define QUEUESIZE  800
 #define LARGE_NUM  500
 #define LARGER_NUM 700
 
@@ -172,15 +173,15 @@ int test_two()
 	int retvalue;
 	mode = 0;
 	count = 0;
-	if ((retvalue = init_memshare(NULL, 0)) != 2) {
+	if ((retvalue = init_memshare(NULL, 0, 0)) != 2) {
 		printf("Test 2,0 failed return value %d\n", retvalue);
 		return 1;
 	}
-	if ((retvalue = init_memshare("memshare", SHMEMSIEZ)) != 0) {
+	if ((retvalue = init_memshare("memshare", SHMEMSIEZ, QUEUESIZE)) != 0) {
 		printf("Test 2,1 failed return value %d\n", retvalue);
 		return 1;
 	}
-	if ((retvalue = init_memshare("memshare", SHMEMSIEZ)) != 1) {
+	if ((retvalue = init_memshare("memshare", SHMEMSIEZ, QUEUESIZE)) != 1) {
 		printf("Test 2,3 failed return value %d\n", retvalue);
 		return 1;
 	}
