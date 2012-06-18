@@ -50,5 +50,5 @@ clean:
 	rm -f src/*.o
 	rm -f src/examples/*.o
 	rm -f out/*
-
+	rm -f *~
 

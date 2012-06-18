@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 			exit(2);
 		}
 		mode = 2;
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
+		strncpy(dest_proc, argv[2], (PROC_NAME_SIZE - 1));
 	}
 	if (mode == 0) {
 		print_usage();

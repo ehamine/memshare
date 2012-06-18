@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		}
 		mode = 1;
 		value1 = atoi(argv[3]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
+		strncpy(dest_proc, argv[2], (PROC_NAME_SIZE - 1));
 	} else if (!strcmp(argv[1], "-s2")) {
 		if (argc != 5) {
 			print_usage();
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 		mode = 2;
 		value1 = atoi(argv[3]);
 		value2 = atoi(argv[4]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
+		strncpy(dest_proc, argv[2], (PROC_NAME_SIZE - 1));
 	} else if (!strcmp(argv[1], "-s3")) {
 		if (argc != 6) {
 			print_usage();
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		value1 = atoi(argv[3]);
 		value2 = atoi(argv[4]);
 		value3 = atoi(argv[5]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
+		strncpy(dest_proc, argv[2], (PROC_NAME_SIZE - 1));
 	} else if (!strcmp(argv[1], "-d")) {
 		if (argc != 4) {
 			print_usage();
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 		}
 		mode = 4;
 		data_size = strlen(argv[3]);
-		strncpy(dest_proc, argv[2], PROC_NAME_SIZE);
+		strncpy(dest_proc, argv[2], (PROC_NAME_SIZE - 1));
 		datastr = malloc(data_size);
 		strncpy(datastr, argv[3], data_size);
 	}

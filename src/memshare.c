@@ -478,9 +478,18 @@ static int start_listen_thread(void)
 {
 	pthread_attr_t tattr;
 
-	pthread_attr_init(&tattr);
-	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-	pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
+	if (pthread_attr_init(&tattr) != 0) {
+	  print(CH_ERROR, "Unable to init thread attribute\n");
+	  return 1;
+	}
+	if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	  print(CH_ERROR, "Unable to set detached state to thread\n");
+	  return 1;
+	}
+	if (pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED) != 0) {
+	  print(CH_ERROR, "Unable to set inherit scheduling\n");
+	  return 1;
+	}
 
 	if (pthread_create(&recthread1_t, &tattr, recthread1, (void *)NULL) !=
 	    0) {

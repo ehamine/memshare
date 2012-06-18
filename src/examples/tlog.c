@@ -35,21 +35,21 @@ void signal2_callback(char *proc, int value1, int value2)
 {
 	switch (value1) {
 	case 1:
-		if ((value2 < 1) && (value2 > 8))
+		if ((value2 < 1) || (value2 > 8))
 			return;
 		/* Set a bit in the mask */
 		mask |= (1 << value2);
 		break;
 
 	case 2:
-		if ((value2 < 1) && (value2 > 8))
+		if ((value2 < 1) || (value2 > 8))
 			return;
 		/* Del a bit in the mask */
 		mask &= ~(1 << value2);
 		break;
 
 	case 3:
-		if ((value2 < 0) && (value2 > 255))
+		if ((value2 < 0) || (value2 > 255))
 			return;
 		mask = value2;
 		break;
@@ -106,7 +106,7 @@ int tsyslog_init(char *name)
 {
 	if (name == NULL)
 		return 1;
-	strncpy(tproc, name, PROC_NAME_SIZE);
+	strncpy(tproc, name, (PROC_NAME_SIZE - 1));
 
 	/* we don't need much space */
 	if (init_memshare(tproc, SHMEMSIZE, 512) != 0)
