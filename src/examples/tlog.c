@@ -34,14 +34,14 @@ void signal2_callback(char *proc, int value1, int value2)
 {
 	switch (value1) {
 	case 1:
-		if ((value2 < 1) || (value2 > 8))
+		if ((value2 < 0) || (value2 > 8))
 			return;
 		/* Set a bit in the mask */
 		mask |= (1 << value2);
 		break;
 
 	case 2:
-		if ((value2 < 1) || (value2 > 8))
+		if ((value2 < 0) || (value2 > 8))
 			return;
 		/* Del a bit in the mask */
 		mask &= ~(1 << value2);

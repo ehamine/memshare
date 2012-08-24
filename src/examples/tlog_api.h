@@ -65,13 +65,13 @@ int tsyslog_replace(int);
 /* This can be used to dynamically set/delete/replace the priority mask for  */
 /* different processes                                                       */
 /*                                                                           */
-/* LOG_EMERG     priority=1                                                  */
-/* LOG_ALERT     priority=2                                                  */
-/* LOG_CRIT      priority=3                                                  */
-/* LOG_ERR       priority=4                                                  */
-/* LOG_WARNING   priority=5                                                  */
-/* LOG_NOTICE    priority=6                                                  */
-/* LOG_INFO      priority=7                                                  */
-/* LOG_DEBUG     priority=8                                                  */
+/* LOG_EMERG     priority=0                                                  */
+/* LOG_ALERT     priority=1                                                  */
+/* LOG_CRIT      priority=2                                                  */
+/* LOG_ERR       priority=3                                                  */
+/* LOG_WARNING   priority=4                                                  */
+/* LOG_NOTICE    priority=5                                                  */
+/* LOG_INFO      priority=6                                                  */
+/* LOG_DEBUG     priority=7                                                  */
 /*                                                                           */
 /*****************************************************************************/
