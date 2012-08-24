@@ -59,10 +59,19 @@ int tsyslog_replace(int);
 
 /*****************************************************************************/
 /*                                                                           */
-/* Set priority bit      :   memsend --d2 <process > 1 <priority>            */
-/* Del priority bit      :   memsend --d2 <process > 2 <priority>            */
-/* Replace priority mask :   memsend --d2 <process > 3 <priority mask>       */
+/* Set priority bit      :   memsend -s2 <process > 1 <priority>             */
+/* Del priority bit      :   memsend -s2 <process > 2 <priority>             */
+/* Replace priority mask :   memsend -s2 <process > 3 <priority mask>        */
 /* This can be used to dynamically set/delete/replace the priority mask for  */
 /* different processes                                                       */
+/*                                                                           */
+/* LOG_EMERG     priority=1                                                  */
+/* LOG_ALERT     priority=2                                                  */
+/* LOG_CRIT      priority=3                                                  */
+/* LOG_ERR       priority=4                                                  */
+/* LOG_WARNING   priority=5                                                  */
+/* LOG_NOTICE    priority=6                                                  */
+/* LOG_INFO      priority=7                                                  */
+/* LOG_DEBUG     priority=8                                                  */
 /*                                                                           */
 /*****************************************************************************/
