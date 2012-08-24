@@ -664,6 +664,7 @@ int init_memshare(char *proc_name, int size, int qsize)
 
 	memcpy(my_proc, proc_name, PROC_NAME_SIZE);
 
+	/* If I don't set a qsize I'm considered to be a send proc only */
 	if (size) {
 		init_queues();
 		seize_queue(&queue_index, "memshare", qsize);
