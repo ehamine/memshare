@@ -1,9 +1,7 @@
 /*
- *      Author: tommy.wiklund
  *
- *      Revision information
- *      2012-02   twik    Initial draft
- *
+ * Tlog, syslog wrapper with IPC control.
+ * Copyright (C) 2012  Tommy Wiklund
  *
  */
 

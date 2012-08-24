@@ -1,9 +1,7 @@
 /*
- *      Author: tommy.wiklund
  *
- *      Revision information
- *      2012-02   twik    Initial draft
- *
+ * Memshare, quick and easy IPC.
+ * Copyright (C) 2012  Tommy Wiklund
  *
  */
 
