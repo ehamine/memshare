@@ -43,7 +43,7 @@ int lock_ctrl_sem = 0;
 /* internal memory view of the ctrl area */
 mem_proc_entry mem_entry[NUMBER_OF_PROCS];
 /* initialized flag */
-int initialized = 0;
+int initialized = 0, send_only = 1;
 /* My own process */
 char my_proc[PROC_NAME_SIZE];
 
@@ -664,7 +664,10 @@ int init_memshare(char *proc_name, int size, int qsize)
 	memcpy(my_proc, proc_name, PROC_NAME_SIZE);
 
 	/* If I don't set a qsize I'm considered to be a send proc only */
-	if (size) {
+	if (size)
+		send_only = 0;
+		
+	if (!send_only) {
 		init_queues();
 		seize_queue(&queue_index, "memshare", qsize);
 	}
@@ -690,13 +693,13 @@ int init_memshare(char *proc_name, int size, int qsize)
 	print(CH_DEBUG, "init_memshare: populate memproc\n");
 	populate_mem_proc();
 
-	if (size)
+	if (!send_only)
 		add_proc(proc_name, size);
 
 	unlock(lock_ctrl_sem);
 	print(CH_DEBUG, "init_memshare:unlock ctrl\n");
 
-	if (size)
+	if (!send_only)
 		start_listen_thread();
 	print(CH_DEBUG, "init_memshare done\n");
 	initialized = 1;
@@ -722,7 +725,8 @@ int data(char *proc, char *data, int len)
 	memcpy(hdr.proc_name, my_proc, PROC_NAME_SIZE);
 	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
 	memcpy((mem_entry[index].shm + SIZEOF_HEADER), data, len);
-	inc_sent();
+	if (!send_only)
+		inc_sent();
 	unlock(mem_entry[index].rlock);
 	return 0;
 }
@@ -750,7 +754,8 @@ int signal1(char *proc, int data1)
 	sig.signal1 = data1;
 	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
 	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	inc_sent();
+	if (!send_only)
+		inc_sent();
 	unlock(mem_entry[index].rlock);
 	return 0;
 }
@@ -778,7 +783,8 @@ int signal2(char *proc, int data1, int data2)
 	sig.signal2 = data2;
 	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
 	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	inc_sent();
+	if (!send_only)
+		inc_sent();
 	unlock(mem_entry[index].rlock);
 	return 0;
 }
@@ -807,7 +813,8 @@ int signal3(char *proc, int data1, int data2, int data3)
 	sig.signal3 = data3;
 	memcpy(mem_entry[index].shm, &hdr, SIZEOF_HEADER);
 	memcpy((mem_entry[index].shm + SIZEOF_HEADER), &sig, SIZEOF_SIGNAL);
-	inc_sent();
+	if (!send_only)
+		inc_sent();
 	unlock(mem_entry[index].rlock);
 	return 0;
 }
