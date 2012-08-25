@@ -12,17 +12,28 @@ typedef void (*callback_1) (char *, int);
 typedef void (*callback_2) (char *, int, int);
 typedef void (*callback_3) (char *, int, int, int);
 typedef void (*callback_data) (char *, char *, int);
+typedef void (*callback_extlog) (int, const char *, ...);
 
 #define PROC_NAME_SIZE 20
 
-#define CH_ERROR 0
-#define CH_INFO  1
-#define CH_DEBUG 2
+
+/*****************************************************************************/
+/* Function Name      : add_log_function                                     */
+/* Description        : Add a function to be called when logging             */
+/* Input(s)           : a function func(int , const char *, ...)             */
+/* Output(s)          : None.                                                */
+/* Return Value(s)    : None.                                                */
+/*****************************************************************************/
+void logfunction_register(callback_extlog);
+
 
 /*****************************************************************************/
 /* Function Name      : set_print_level                                      */
-/* Description        : Sets the verbose level for output                    */
-/* Input(s)           : int  CH_ERROR, CH_INFO, CH_DEBUG                     */
+/* Description        : Sets the verbose level for output, every thing below */
+/*                    : will be printed.                                     */
+/* Input(s)           : From 0 to 7, syslog levels can be used (int)         */
+/*                    : If an external logfunction is used this level is     */
+/*                    : bypassed                                             */
 /* Output(s)          : None.                                                */
 /* Return Value(s)    : 0 ok                                                 */
 /*****************************************************************************/

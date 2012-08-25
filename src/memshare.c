@@ -26,6 +26,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <syslog.h>
 #include "queue.h"
 
 static pthread_t recthread1_t, recthread2_t;
@@ -71,9 +72,11 @@ callback_1 callback1 = NULL;
 callback_2 callback2 = NULL;
 callback_3 callback3 = NULL;
 callback_data callbackdata = NULL;
+callback_extlog callbackextlog = NULL;
+
 
 /* print functions either syslog, printf of user specific */
-int current_level = CH_ERROR;
+int current_level = LOG_ERR;
 
 static int print(int level, const char *format, ...)
 {
@@ -82,8 +85,12 @@ static int print(int level, const char *format, ...)
 
 	/* add syslog and user specific TODO */
 	va_start(ap, format);
-	if (level <= current_level) {
+	if (callbackextlog) {
+		callbackextlog(level, format, ap);
+	} else {
+		if (level <= current_level) {
 		retval = vprintf(format, ap);
+		}
 	}
 	va_end(ap);
 	return retval;
@@ -106,8 +113,8 @@ static void *recthread2(void *arg)
 					     hdr->msg_len);
 				free(msg);
 			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
+				print(LOG_WARNING,
+				      "No callback for msg_type %d\n",
 				      DATA);
 			}
 			break;
@@ -118,8 +125,8 @@ static void *recthread2(void *arg)
 				callback1(hdr->proc_name, sig->signal1);
 				free(msg);
 			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
+				print(LOG_WARNING,
+				      "No callback for msg_type %d\n",
 				      SIGNAL1);
 			}
 			break;
@@ -131,8 +138,8 @@ static void *recthread2(void *arg)
 					  sig->signal2);
 				free(msg);
 			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
+				print(LOG_WARNING,
+				      "No callback for msg_type %d\n",
 				      SIGNAL2);
 			}
 			break;
@@ -144,14 +151,14 @@ static void *recthread2(void *arg)
 					  sig->signal2, sig->signal3);
 				free(msg);
 			} else {
-				print(CH_INFO,
-				      "memshare: No callback for msg_type %d\n",
+				print(LOG_WARNING,
+				      "No callback for msg_type %d\n",
 				      SIGNAL3);
 			}
 			break;
 
 		default:
-			print(CH_ERROR, "memshare: Illeagal msg_type %d\n",
+			print(LOG_ERR, "Illeagal msg_type %d\n",
 			      hdr->msg_type);
 			free(msg);
 			break;
@@ -167,9 +174,9 @@ static void *recthread1(void *arg)
 
 	for (;;) {
 		/* Add check for prio, TODO */
-		print(CH_DEBUG, "recthread going to lock\n");
+		print(LOG_DEBUG, "recthread going to lock\n");
 		lock(mem_entry[my_index].rlock);
-		print(CH_DEBUG, "Entry inserted in shm for my process\n");
+		print(LOG_DEBUG, "Entry inserted in shm for my process\n");
 		hdr = (header *) mem_entry[my_index].shm;
 		/* check return of allocation TODO */
 		msg = malloc(hdr->msg_len + SIZEOF_HEADER);
@@ -177,8 +184,8 @@ static void *recthread1(void *arg)
 		       (hdr->msg_len + SIZEOF_HEADER));
 		if (lo_qadd(queue_index, &msg)) {
 			/* Failed to put in queue, msg lost */
-			print(CH_ERROR,
-			      "memshare: Failed to put msg in queue, msg with seq nr %d is lost!\n",
+			print(LOG_ERR,
+			      "Failed to put msg in queue, msg with seq nr %d is lost!\n",
 			      hdr->seq);
 			free(msg);
 		} else {
@@ -202,13 +209,13 @@ static int create_lock(int key, int value)
 	union semun ctrl;
 	int sem, mode = 0;
 
-	print(CH_DEBUG, "create_lock key=%d, value=%d\n", key, value);
+	print(LOG_DEBUG, "Create_lock key=%d, value=%d\n", key, value);
 	if ((sem = semget(key, 1, IPC_EXCL | IPC_CREAT | 0666)) == -1) {
 		/* Trying to open it exclusively failed, try normal */
-		print(CH_DEBUG, "create_lock Key=%d already open\n", key);
+		print(LOG_DEBUG, "Create_lock Key=%d already open\n", key);
 		mode = 1;
 		if ((sem = semget(key, 1, IPC_CREAT | 0666)) == -1) {
-			print(CH_ERROR, "Unable to create semaphore\n");
+			print(LOG_ERR, "Unable to create semaphore\n");
 			return -1;
 		}
 	}
@@ -218,11 +225,11 @@ static int create_lock(int key, int value)
 	ctrl.val = value;
 
 	if (mode == 0) {
-		print(CH_DEBUG, "create_lock Init sem=%d to %d\n", sem, value);
+		print(LOG_DEBUG, "Create_lock Init sem=%d to %d\n", sem, value);
 		/* Its the first time for this key, init it to work as a mutex */
 		if (semctl(sem, 0, SETVAL, ctrl) == -1) {
-			print(CH_ERROR,
-			      "memshare: Unable to initialize semaphore\n");
+			print(LOG_ERR,
+			      "Unable to initialize semaphore\n");
 			return -1;
 		}
 	}
@@ -234,13 +241,13 @@ static int destroy_lock(int key)
 	union semun ctrl;
 	int sem;
 
-	print(CH_DEBUG, "destroy_lock key=%d\n", key);
+	print(LOG_DEBUG, "Destroy_lock key=%d\n", key);
 	if ((sem = semget(key, 1, IPC_CREAT | 0600)) == -1) {
-		print(CH_ERROR, "memshare: Unable to create semaphore\n");
+		print(LOG_ERR, "Unable to create semaphore\n");
 		return 1;
 	}
 	if (semctl(sem, 0, IPC_RMID, ctrl) == -1) {
-		print(CH_ERROR, "memshare: Unable to initialize semaphore\n");
+		print(LOG_ERR, "Unable to initialize semaphore\n");
 		return 1;
 	}
 	return 0;
@@ -320,7 +327,7 @@ static void populate_mem_proc_single(int index)
 		/* this entry should be active, if not it has crached and should be garbage collected */
 		if ((sem = create_lock(entry->key_active, 0)) != -1) {
 			if (try_lock1(sem)) {
-				print(CH_DEBUG, "Index %d is active by %s\n",
+				print(LOG_DEBUG, "Index %d is active by %s\n",
 				      index, entry->proc_name);
 				/* active lets store the data */
 				mem_entry[index].active = sem;
@@ -329,30 +336,30 @@ static void populate_mem_proc_single(int index)
 						     entry->size_shm,
 						     &mode)) == 0) {
 					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to alloc shared mem\n");
+					print(LOG_ERR,
+					      "Unable to alloc shared mem\n");
 					clear_proc_entry(index);
 					return;
 				}
 				if ((mem_entry[index].rlock =
 				     create_lock(entry->key_rlock, 0)) == -1) {
 					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to create rlock\n");
+					print(LOG_ERR,
+					      "Unable to create rlock\n");
 					clear_proc_entry(index);
 					return;
 				}
 				if ((mem_entry[index].wlock =
 				     create_lock(entry->key_wlock, 0)) == -1) {
 					/* garbage collect, they should have valid keys */
-					print(CH_ERROR,
-					      "memshare: Unable to create wlock\n");
+					print(LOG_ERR,
+					      "Unable to create wlock\n");
 					clear_proc_entry(index);
 					return;
 				}
 			} else {
-				print(CH_INFO,
-				      "memshare: Index %d is active in shared mem but has no process\n",
+				print(LOG_DEBUG,
+				      "Index %d is active in shared mem but has no process\n",
 				      index);
 				clear_proc_entry(index);
 				/* garbage collect */
@@ -361,7 +368,7 @@ static void populate_mem_proc_single(int index)
 			       PROC_NAME_SIZE);
 		}
 	} else {
-		print(CH_INFO, "memshare: Index %d is not active\n", index);
+		print(LOG_DEBUG, "Index %d is not active\n", index);
 	}
 }
 
@@ -384,7 +391,7 @@ int check_proc_entry(int index)
 
 	populate_mem_proc_single(index);
 
-	print(CH_DEBUG, "Check proc entry index %d active1 %d active2 %d\n",
+	print(LOG_DEBUG, "Check proc entry index %d active1 %d active2 %d\n",
 	      index, try_lock1(mem_entry[index].active), entry->active);
 	if (try_lock1(mem_entry[index].active)
 	    &&
@@ -399,7 +406,7 @@ int check_proc_entry(int index)
 static int clear_proc_entry(int index)
 {
 	proc_entry *entry;
-	print(CH_INFO, "memshare: Removes proc from entry and memlist\n");
+	print(LOG_DEBUG, "Removes proc from entry and memlist\n");
 	entry = (proc_entry *) get_proc_at(index);
 	clear_shm(entry->key_shm, entry->size_shm);
 	entry->key_shm = 0;
@@ -428,7 +435,7 @@ static int add_proc(char *name, int size)
 	if ((index = get_next_free_index()) == NUMBER_OF_PROCS) {
 		return 1;
 	}
-	print(CH_DEBUG, "Addin my proc %s to index %d\n", name, index);
+	print(LOG_DEBUG, "Adding proc %s to index %d\n", name, index);
 	entry = get_proc_at(index);
 	key_base = index * 4 + SEM_CTRL_KEY;
 	entry->key_shm = key_base + 1;
@@ -439,8 +446,8 @@ static int add_proc(char *name, int size)
 	entry->sent = 0;
 	entry->received = 0;
 	my_index = index;
-	print(CH_DEBUG,
-	      "Allocating shared memory allocated for key %d size %d\n",
+	print(LOG_DEBUG,
+	      "Allocating shared memory for key %d size %d\n",
 	      entry->key_shm, entry->size_shm);
 	/* Map up yourself in the local memory map with pointers instead */
 	/* of keys                                                       */
@@ -449,7 +456,7 @@ static int add_proc(char *name, int size)
 		clear_proc_entry(index);
 		return 1;
 	}
-	print(CH_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
+	print(LOG_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
 	if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == -1) {
 		clear_proc_entry(index);
 		return 1;
@@ -464,7 +471,7 @@ static int add_proc(char *name, int size)
 	}
 	set_active(mem_entry[index].active);
 	if (try_lock1(mem_entry[index].active))
-		print(CH_DEBUG, "Proc %s is now active at index %d\n", name,
+		print(LOG_DEBUG, "Proc %s is now active at index %d\n", name,
 		      index);
 	strncpy(entry->proc_name, name, PROC_NAME_SIZE);
 	memcpy(mem_entry[index].proc_name, entry->proc_name, PROC_NAME_SIZE);
@@ -478,27 +485,27 @@ static int start_listen_thread(void)
 	pthread_attr_t tattr;
 
 	if (pthread_attr_init(&tattr) != 0) {
-	  print(CH_ERROR, "Unable to init thread attribute\n");
+	  print(LOG_ERR, "Unable to init thread attribute\n");
 	  return 1;
 	}
 	if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
-	  print(CH_ERROR, "Unable to set detached state to thread\n");
+	  print(LOG_ERR, "Unable to set detached state to thread\n");
 	  return 1;
 	}
 	if (pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED) != 0) {
-	  print(CH_ERROR, "Unable to set inherit scheduling\n");
+	  print(LOG_ERR, "Unable to set inherit scheduling\n");
 	  return 1;
 	}
 
 	if (pthread_create(&recthread1_t, &tattr, recthread1, (void *)NULL) !=
 	    0) {
-		print(CH_ERROR, "memshare: Unable to create worker thread1\n");
+		print(LOG_ERR, "Unable to create worker thread1\n");
 		return 1;
 	}
 
 	if (pthread_create(&recthread2_t, &tattr, recthread2, (void *)NULL) !=
 	    0) {
-		print(CH_ERROR, "memshare: Unable to create worker thread2\n");
+		print(LOG_ERR, "Unable to create worker thread2\n");
 		return 1;
 	}
 	return 0;
@@ -510,7 +517,7 @@ static int clear_shm(int key, int size)
 	int shmid;
 
 	if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
-		print(CH_ERROR, "memshare: Unable get shared mem for key\n",
+		print(LOG_ERR, "Unable get shared mem for key\n",
 		      key);
 		return 1;
 	}
@@ -536,20 +543,19 @@ static char *get_shm(int key, int size, int *mode)
 			/* already open */
 			*mode = 0;
 		} else {
-			print(CH_DEBUG, "Creates shared mem control area\n");
+			print(LOG_DEBUG, "Creating shared mem for key%d\n", key);
 		}
 	}
 	if (*mode == 0) {
 		if ((shmid = shmget(key, size, IPC_CREAT | 0666)) < 0) {
-			print(CH_ERROR, "memshare, Unable get shared mem\n");
+			print(LOG_ERR, "Unable get shared mem for key %d\n", key);
 			return NULL;
 		}
 	}
 
-	print(CH_INFO, "memshare: Key %d allocated with shmid %d\n", key,
-	      shmid);
+	print(LOG_DEBUG, "Key %d allocated with shmid %d\n", key, shmid);
 	if ((data = shmat(shmid, NULL, 0)) == (char *)-1) {
-		print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
+		print(LOG_ERR, "Unable to alloc shared mem for key %d\n", key);
 		return NULL;
 	}
 	return data;
@@ -620,10 +626,14 @@ int send_ack(int seq)
 }
 
 /****************API***********************/
+void logfunction_register(callback_extlog cbe)
+{
+	callbackextlog = cbe;
+}
 
 int set_print_level(int level)
 {
-	if ((level == CH_ERROR) || (level == CH_INFO) || (level == CH_DEBUG)) {
+	if ((level >= LOG_EMERG) && (level <= LOG_DEBUG)) {
 		current_level = level;
 		return 0;
 	}
@@ -653,7 +663,7 @@ void signal3_register(callback_3 cb3)
 int init_memshare(char *proc_name, int size, int qsize)
 {
 	int ctrl_mode = 1;
-	print(CH_DEBUG, "init_memshare start\n");
+	print(LOG_DEBUG, "Init_memshare start\n");
 
 	if (initialized)
 		return 1;
@@ -677,31 +687,31 @@ int init_memshare(char *proc_name, int size, int qsize)
 
 	/* start off by locking the ctrl lock */
 	if ((lock_ctrl_sem = create_lock(SEM_CTRL_KEY, 1)) == -1) {
-		print(CH_ERROR, "memshare: Unable to create semaphore\n");
+		print(LOG_ERR, "Unable to create semaphore\n");
 		return 1;
 	}
-	print(CH_DEBUG, "Created ctrl lock\n");
+	print(LOG_DEBUG, "Created ctrl lock\n");
 
 	lock(lock_ctrl_sem);
-	print(CH_DEBUG, "init_memshare ctrl\n");
+	print(LOG_DEBUG, "Init_memshare ctrl\n");
 
 	/* map up the ctrl area */
 	if ((shm_ctrl_ptr = get_shm(SHM_CTRL_KEY, CTRL_SIZE, &ctrl_mode)) == 0) {
-		print(CH_ERROR, "memshare: Unable to alloc shared mem\n");
+		print(LOG_ERR, "Unable to alloc shared mem\n");
 		return 3;
 	}
-	print(CH_DEBUG, "init_memshare: populate memproc\n");
+	print(LOG_DEBUG, "Init_memshare populate memproc\n");
 	populate_mem_proc();
 
 	if (!send_only)
 		add_proc(proc_name, size);
 
 	unlock(lock_ctrl_sem);
-	print(CH_DEBUG, "init_memshare:unlock ctrl\n");
+	print(LOG_DEBUG, "Init_memshare unlock ctrl\n");
 
 	if (!send_only)
 		start_listen_thread();
-	print(CH_DEBUG, "init_memshare done\n");
+	print(LOG_DEBUG, "Init_memshare done\n");
 	initialized = 1;
 	return 0;
 }
@@ -713,11 +723,11 @@ int data(char *proc, char *data, int len)
 	if (!initialized)
 		return 2;
 	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
+		print(LOG_NOTICE, "No such process %s\n", proc);
 		return 1;
 	}
 	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending data to %s at index %d\n", proc, index);
+	print(LOG_DEBUG, "Sending data to %s at index %d\n", proc, index);
 	lock(mem_entry[index].wlock);
 	hdr.msg_type = DATA;
 	hdr.msg_len = len;
@@ -741,11 +751,11 @@ int signal1(char *proc, int data1)
 	if (!initialized)
 		return 2;
 	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
+		print(LOG_NOTICE, "No such process %s\n", proc);
 		return 1;
 	}
 	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+	print(LOG_DEBUG, "Sending signal to %s at index %d\n", proc, index);
 	lock(mem_entry[index].wlock);
 	hdr.msg_type = SIGNAL1;
 	hdr.msg_len = SIZEOF_SIGNAL;
@@ -769,11 +779,11 @@ int signal2(char *proc, int data1, int data2)
 	if (!initialized)
 		return 2;
 	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
+		print(LOG_NOTICE, "No such process %s\n", proc);
 		return 1;
 	}
 	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+	print(LOG_DEBUG, "Sending signal to %s at index %d\n", proc, index);
 	lock(mem_entry[index].wlock);
 	hdr.msg_type = SIGNAL2;
 	hdr.msg_len = SIZEOF_SIGNAL;
@@ -798,11 +808,11 @@ int signal3(char *proc, int data1, int data2, int data3)
 	if (!initialized)
 		return 2;
 	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
+		print(LOG_NOTICE, "No such process %s\n", proc);
 		return 1;
 	}
 	/*populate_mem_proc_single(index); */
-	print(CH_DEBUG, "Sending signal to %s at index %d\n", proc, index);
+	print(LOG_DEBUG, "Sending signal to %s at index %d\n", proc, index);
 	lock(mem_entry[index].wlock);
 	hdr.msg_type = SIGNAL3;
 	hdr.msg_len = SIZEOF_SIGNAL;
@@ -825,7 +835,7 @@ int get_datasize(char *proc)
 	proc_entry *entry;
 
 	if ((index = get_proc_index(proc)) < 0) {
-		print(CH_INFO, "memshare: No such process %s\n", proc);
+		print(LOG_NOTICE, "No such process %s\n", proc);
 		return 0;
 	}
 	entry = get_proc_at(index);

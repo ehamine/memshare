@@ -110,6 +110,9 @@ int tsyslog_init(char *name)
 	/* we don't need much space */
 	if (init_memshare(tproc, SHMEMSIZE, 512) != 0)
 		return 2;
+		
+	/* let memshare use tsyslog as well */
+	logfunction_register(tsyslog);
 
 	/* register the callback */
 	signal2_register(signal2_callback);
