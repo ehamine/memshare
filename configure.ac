@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.63])
 AC_INIT([memshare], [0.3.0], [100yep@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AM_PROG_LIBTOOL
