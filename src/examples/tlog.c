@@ -15,12 +15,11 @@
 /* You should have received a copy of the GNU Lesser General Public License        */
 /* along with Tlog.  If not, see <http://www.gnu.org/licenses/>.                   */
 
-#include "memshare.h"
-#include "memshare_api.h"
 #include <syslog.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include "memshare_api.h"
 #include "tlog_api.h"
 
 #define SHMEMSIZE 50
