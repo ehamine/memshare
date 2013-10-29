@@ -4,12 +4,6 @@ if MEMCMD
 MEMPROGS = memwatch memsend
 endif
 
-if TLOG
-MEMLIBS = libmemshare.la libtlog.la
-else
-MEMLIBS = libmemshare.la
-endif
-
 if TESTS
 MEMTST = basetest reply listen tlogtest
 endif
@@ -29,12 +23,18 @@ listen_LDADD = libmemshare.la -lpthread
 tlogtest_SOURCES = src/examples/tlogmain.c
 tlogtest_LDADD = libtlog.la -lpthread
 
-lib_LTLIBRARIES = $(MEMLIBS)
+lib_LTLIBRARIES = libmemshare.la
 libmemshare_la_SOURCES = src/memshare.c \
 			src/memshare.h \
 			src/queue.c \
 			src/queue.h \
 			src/memshare_api.h
+include_HEADERS = src/memshare_api.h
+
+if TLOG
 libtlog_la_SOURCES = src/examples/tlog.c \
 			src/examples/tlog_api.h
 libtlog_la_LIBADD = libmemshare.la
+lib_LTLIBRARIES += libtlog.la
+include_HEADERS += src/examples/tlog_api.h
+endif
