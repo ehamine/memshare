@@ -94,8 +94,7 @@ void tsyslog(int priority, const char *fmt, ...)
 	/* check mask */
 	if (mask & (1 << priority)) {
 		va_start(ap, fmt);
-		/*vsyslog(priority, fmt, ap); */
-		vprintf(fmt, ap);
+		vsyslog(priority, fmt, ap);
 		va_end(ap);
 	}
 }
