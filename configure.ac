@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([memshare], [0.3.2], [100yep@gmail.com])
+AC_INIT([memshare], [0.3.4], [100yep@gmail.com])
 AM_INIT_AUTOMAKE([foreign])
 AM_PROG_LIBTOOL
 AC_PROG_RANLIB

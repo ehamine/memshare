@@ -9,8 +9,8 @@ memwatch_SOURCES = src/memwatch.c
 memwatch_LDADD = libmemshare.la
 endif
 
-TESTS = basetest reply listen
-check_PROGRAMS = basetest reply listen
+#TESTS = basetest reply listen
+#check_PROGRAMS = basetest reply listen
 basetest_SOURCES = src/test/testmain.c
 basetest_LDADD = libmemshare.la
 reply_SOURCES = src/test/reply.c
