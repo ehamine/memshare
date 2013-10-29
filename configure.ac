@@ -31,8 +31,4 @@ AC_ARG_ENABLE([tlog],
 AS_HELP_STRING([--disable-tlog], [Don't build the tlog library]))
 AM_CONDITIONAL([TLOG], [test "x$enable_tlog" != "xno"])
 
-AC_ARG_ENABLE([tests],
-AS_HELP_STRING([--enable-tests], [Build the test executable]))
-AM_CONDITIONAL([TESTS], [test "$enable_tests" = "yes"])
-
 AC_OUTPUT(Makefile)

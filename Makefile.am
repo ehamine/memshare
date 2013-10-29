@@ -1,19 +1,15 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src -Wall
 
 if MEMCMD
-MEMPROGS = memwatch memsend
-endif
-
-if TESTS
-MEMTST = basetest reply listen tlogtest
-endif
-
-bin_PROGRAMS = $(MEMPROGS)
-noinst_PROGRAMS = $(MEMTST)
+bin_PROGRAMS = memsend memwatch
 memsend_SOURCES = src/memsend.c
 memsend_LDADD = libmemshare.la -lpthread
 memwatch_SOURCES = src/memwatch.c
 memwatch_LDADD = libmemshare.la -lpthread
+endif
+
+TESTS = basetest reply listen tlogtest
+check_PROGRAMS = basetest reply listen tlogtest
 basetest_SOURCES = src/test/testmain.c
 basetest_LDADD = libmemshare.la -lpthread
 reply_SOURCES = src/test/reply.c
