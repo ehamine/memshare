@@ -76,6 +76,8 @@ int main(int argc, char *argv[])
 
 	if (init_memshare(procname, SHMEMSIZE, QUEUESIZE)) {
 		printf("Failed to init memshare\n");
+		if (strncmp(procname, "number_8", PROC_NAME_SIZE) == 0)
+			system("./memsend -s1 memshare 7");
 		exit(1);
 	}
 	data_register(data_callback);

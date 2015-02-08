@@ -55,6 +55,10 @@ void signal1_callback(char *proc, int value)
 		}
 		count++;
 	}
+	if (mode == 5) {
+		if (value == 7)
+			count = 1;
+	}
 }
 
 void signal2_callback(char *proc, int value1, int value2)
@@ -329,6 +333,36 @@ int test_six()
 	}
 }
 
+/*****************************************************************************/
+/*                              Test seven                                   */
+/* Description               : Too many procs                                */
+/*                                                                           */
+/*****************************************************************************/
+int test_seven()
+{
+	int i;
+	mode = 5;
+	count = 0;
+	char systemcmd[25];
+	 
+	for (i=0;i<9;i++) {
+		snprintf(systemcmd, 25, "./reply number_%d &", i);
+		system(systemcmd);
+	}
+	sleep(2);
+	for (i=0;i<8;i++) {
+		snprintf(systemcmd, 25, "number_%d", i);
+		data(systemcmd, "exit\0", strlen("exit") + 1);
+	}
+	if (count != 1) {
+		printf("Test 7 failed %d\n", count);
+		return 1;
+	}
+	printf("Test 7 OK\n");
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	system("./reply reply &");
@@ -363,6 +397,7 @@ int main(int argc, char *argv[])
 
 	if (test_six())
 		exit(1);
+	test_seven();
 
 	data("reply", "exit\0", strlen("exit") + 1);
 	return 0;
