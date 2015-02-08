@@ -8,6 +8,7 @@ AM_PROG_LIBTOOL
 AC_PROG_RANLIB
 AC_CONFIG_SRCDIR([src/memsend.c])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_PROG_CC
@@ -24,11 +25,15 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset])
 
 AC_ARG_ENABLE([memcmds],[
-AS_HELP_STRING([--disable-memcmds], [Don't build the memshare cmds])])
+AS_HELP_STRING([--disable-memcmds], [Do not build the memshare cmds])])
 AM_CONDITIONAL([MEMCMD], [test "x$enable_memcmds" != "xno"])
 
-AC_ARG_ENABLE([tlog],
-AS_HELP_STRING([--disable-tlog], [Don't build the tlog library]))
+AC_ARG_ENABLE([tlog],[
+AS_HELP_STRING([--disable-tlog], [Do not build the tlog library])])
 AM_CONDITIONAL([TLOG], [test "x$enable_tlog" != "xno"])
+
+AC_ARG_ENABLE([memtest],[
+AS_HELP_STRING([--enable-memtest], [Build the test framework])])
+AM_CONDITIONAL([MEMTEST], [test "x$enable_memtest" == "xyes"])
 
 AC_OUTPUT(Makefile)
