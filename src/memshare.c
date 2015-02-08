@@ -454,20 +454,20 @@ static int add_proc(char *name, int size)
 	if ((mem_entry[index].shm =
 	     get_shm(entry->key_shm, entry->size_shm, &mode)) == NULL) {
 		clear_proc_entry(index);
-		return 1;
+		return 2;
 	}
 	print(LOG_DEBUG, "Shared memory allocated for key %d\n", entry->key_shm);
 	if ((mem_entry[index].rlock = create_lock(entry->key_rlock, 0)) == -1) {
 		clear_proc_entry(index);
-		return 1;
+		return 2;
 	}
 	if ((mem_entry[index].wlock = create_lock(entry->key_wlock, 1)) == -1) {
 		clear_proc_entry(index);
-		return 1;
+		return 2;
 	}
 	if ((mem_entry[index].active = create_lock(entry->key_active, 0)) == -1) {
 		clear_proc_entry(index);
-		return 1;
+		return 2;
 	}
 	set_active(mem_entry[index].active);
 	if (try_lock1(mem_entry[index].active))
@@ -663,6 +663,7 @@ void signal3_register(callback_3 cb3)
 int init_memshare(char *proc_name, int size, int qsize)
 {
 	int ctrl_mode = 1;
+	int retvalue = 0;
 	print(LOG_DEBUG, "Init_memshare start\n");
 
 	if (initialized)
@@ -703,8 +704,13 @@ int init_memshare(char *proc_name, int size, int qsize)
 	print(LOG_DEBUG, "Init_memshare populate memproc\n");
 	populate_mem_proc();
 
-	if (!send_only)
-		add_proc(proc_name, size);
+	if (!send_only) {
+		retvalue = add_proc(proc_name, size);
+		if (retvalue == 1)
+			return 4;
+		if (retvalue == 2)
+			return 5;
+	}
 
 	unlock(lock_ctrl_sem);
 	print(LOG_DEBUG, "Init_memshare unlock ctrl\n");

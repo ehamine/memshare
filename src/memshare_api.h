@@ -52,6 +52,8 @@ int set_print_level(int);
 /*                      1 meaning semaphore allocation failure               */
 /*                      2 register a proc without allocation size            */
 /*                      3 A NULL pointer as a proc name                      */
+/*                      4 Max num of processes registered                    */
+/*                      5 Shared memory problems                             */
 /*****************************************************************************/
 int init_memshare(char *, int, int);
 
