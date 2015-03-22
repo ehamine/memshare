@@ -1,6 +1,8 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src -Wall -pthread
 AM_LDFLAGS = -pthread
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 AUTOMAKE_ARGS = --add-missing
 
 if MEMCMD
