@@ -105,17 +105,21 @@ int tsyslog_init(char *name)
 		return 1;
 	strncpy(tproc, name, (PROC_NAME_SIZE - 1));
 
+	/* let memshare use tsyslog as well */
+	logfunction_register(tsyslog);
+
+	openlog(tproc, LOG_NDELAY | LOG_CONS, LOG_LOCAL0);
+
+	mask = 64; /* Setting bit 6, LOG_INFO to allow info printout */
+	tsyslog(LOG_INFO, "Initializing tsyslog\n");
+	mask = 31; /* Setting all bits up to LOG_WARNING as default */
+
 	/* we don't need much space */
 	if (init_memshare(tproc, SHMEMSIZE, 512) != 0)
 		return 2;
 		
-	/* let memshare use tsyslog as well */
-	logfunction_register(tsyslog);
-
 	/* register the callback */
 	signal2_register(signal2_callback);
-
-	openlog(tproc, LOG_NDELAY | LOG_CONS, LOG_LOCAL0);
 
 	init = 1;
 	return 0;
